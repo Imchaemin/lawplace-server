@@ -7,6 +7,191 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum MembershipRole {
+  ADMIN
+
+  INACTIVE // 정지
+
+  USER_LV0 // Guest, 멤버십 만료 등. 계정은 있지만 권한은 없는 유저
+  USER_LV1 // 멤버십 활성화 유저. Lounge 멤버십 유저
+  USER_LV2 // 멤버십 활성화 유저. Private Office 멤버십 유저
+}
+
+enum CompanyRole {
+  COMPANY_ADMIN // 회사 관리자. 사원 추가 삭제, 충전 등 결제시스템 처리
+
+  INACTIVE // 정지
+
+  COMPANY_LV0 // 퇴사자, 멤버십 만료 등. 계정은 있지만 권한은 없는 유저
+  COMPANY_LV1 // 회사 직원
+}
+
+enum CreditTransactionType {
+  CHARGE // 충전
+  SPEND // 사용
+  REFUND // 환불
+}
+
 model User {
   id String @id @default(uuid())
+
+  email    String  @unique
+  password String? // hashed password. 소셜로그인의 경우 null
+  name     String?
+  phone    String?
+
+  membershipRole MembershipRole @default(USER_LV0)
+
+  companyId   String?
+  company     Company?     @relation(fields: [companyId], references: [id])
+  companyRole CompanyRole? @default(COMPANY_LV0)
+
+  creditId String?
+  credit   Credit? @relation(fields: [creditId], references: [id])
+
+  meetingRoomReservations MeetingRoomReservation[]
+  invitations             Invitation[]
+  creditTransactions      CreditTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Company {
+  id String @id @default(uuid())
+
+  credit Credit?
+
+  name      String?
+  employees User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Credit {
+  id String @id @default(uuid())
+
+  users User[]
+
+  companyId String?  @unique
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  defaultCredit Decimal @default(0.0) @db.Decimal(10, 2)
+  currentCredit Decimal @default(0.0) @db.Decimal(10, 2)
+
+  lastRenewalAt DateTime // 정산 날짜.
+  nextRenewalAt DateTime? // 다음 정산 날짜. null인 경우 멤버십 종료 시점.
+
+  creditTransactions CreditTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model CreditTransaction {
+  id String @id @default(uuid())
+
+  creditId String
+  credit   Credit @relation(fields: [creditId], references: [id])
+
+  name        String
+  description String?
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  type   CreditTransactionType
+  amount Decimal               @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model MeetingRoom {
+  id String @id @default(uuid())
+
+  name        String
+  description String?
+
+  active Boolean @default(true)
+
+  capacity Int     @default(4)
+  credit   Decimal @default(0.0) @db.Decimal(10, 2) // reservation interval당 credit
+
+  enablePeakTime  Boolean   @default(false)
+  peakTimeCredit  Decimal   @default(0.0) @db.Decimal(10, 2) // 피크타임 credit
+  peakTimeStartAt DateTime? // utc
+  peakTimeEndAt   DateTime? // utc
+
+  reservationInterval Int @default(30) // 최소 예약 시간 (분)
+
+  facilities String[]
+
+  meetingRoomReservations MeetingRoomReservation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model MeetingRoomReservation {
+  id String @id @default(uuid())
+
+  meetingRoom   MeetingRoom? @relation(fields: [meetingRoomId], references: [id])
+  meetingRoomId String?
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  startAt DateTime // utc
+  endAt   DateTime // utc
+
+  totalCredit Decimal @default(0.0) @db.Decimal(10, 2) // reservation interval당 credit
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Invitation {
+  id String @id @default(uuid())
+
+  inviterId String
+  inviter   User   @relation(fields: [inviterId], references: [id])
+
+  visitorName  String
+  visitorEmail String?
+  visitorPhone String?
+  visitorCode  String?
+
+  visitStartAt DateTime
+  visitEndAt   DateTime
+
+  purpose String?
+  message String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Notice {
+  id String @id @default(uuid())
+
+  title String
+
+  url     String?
+  content String?
+  image   String?
+
+  noticeCategoryId String?
+  noticeCategory   NoticeCategory? @relation(fields: [noticeCategoryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model NoticeCategory {
+  id String @id @default(uuid())
+
+  name    String
+  notices Notice[]
 }
