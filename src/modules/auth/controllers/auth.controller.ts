@@ -11,7 +11,7 @@ import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { PrivateCorsInterceptor } from '@/interceptors/cors.interceptor';
 
-import { GeneratedTokensDto, RefreshReqBodyDto, SigninupReqBodyDto } from '../dtos/auth.dto';
+import { GeneratedTokensDto, RefreshReqBodyDto } from '../dtos/auth.dto';
 import { AuthService } from '../services/auth.service';
 
 @ApiTags('AUTH')
@@ -20,17 +20,6 @@ import { AuthService } from '../services/auth.service';
 @UsePipes(ZodValidationPipe)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  @Post('signinup')
-  @ApiOperation({ summary: '회원가입' })
-  @ApiOkResponse({
-    description: '유저 토큰 반환',
-    type: GeneratedTokensDto,
-  })
-  async signinup(@Body() body: SigninupReqBodyDto) {
-    if (!body.idToken) throw new BadRequestException('idToken is required');
-    return this.authService.signinup(body.idToken);
-  }
 
   @Post('refresh-token')
   @ApiOperation({ summary: '토큰 갱신' })

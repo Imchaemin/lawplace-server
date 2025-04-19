@@ -1,0 +1,31 @@
+import { CompanyInvitationStatus, MembershipRole } from '@prisma/clients/client';
+import { CompanyRole } from '@prisma/clients/client';
+import { z } from 'zod';
+
+import { CreditSchema } from './credit';
+import { CompanyMembershipSchema } from './membership';
+
+export const CompanySchema = z.object({
+  id: z.string(),
+
+  name: z.string(),
+  credit: CreditSchema.nullable(),
+  membership: CompanyMembershipSchema.nullable(),
+});
+export type Company = z.infer<typeof CompanySchema>;
+
+export const CompanyInvitationSchema = z.object({
+  id: z.string(),
+  company: CompanySchema,
+
+  userName: z.string(),
+  userEmail: z.string(),
+  userPhone: z.string().nullable(),
+
+  membershipRole: z.nativeEnum(MembershipRole),
+  companyRole: z.nativeEnum(CompanyRole),
+
+  status: z.nativeEnum(CompanyInvitationStatus),
+  message: z.string().nullable(),
+});
+export type CompanyInvitation = z.infer<typeof CompanyInvitationSchema>;

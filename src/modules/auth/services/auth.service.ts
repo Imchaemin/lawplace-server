@@ -4,8 +4,8 @@ import * as bcrypt from 'bcrypt';
 import * as admin from 'firebase-admin';
 
 import { JwtPayload } from '@/dtos/auth.dto';
-import { UserBase } from '@/entities/user';
-import { UserService } from '@/modules/user/services/user.service';
+import { UserAuth } from '@/entities/user';
+import { UserTermsConditionsService } from '@/modules/user/services/user-terms-conditions.service';
 import { PrismaService } from '@/prisma/services/prisma.service';
 
 import { GeneratedTokensDto } from '../dtos/auth.dto';
@@ -15,7 +15,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly userService: UserService,
+    private readonly userTermsConditionsService: UserTermsConditionsService,
     @Inject('firebase') private readonly firebase: admin.app.App
   ) {}
 
@@ -42,7 +42,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async signinup(idToken: string): Promise<UserBase> {
+  async signinup(idToken: string): Promise<UserAuth> {
     // check token
     const decoded = await this.verifyIdToken(idToken);
     const {
@@ -52,12 +52,18 @@ export class AuthService {
     } = decoded;
 
     // check user
-    const existing = await this.prisma.user.findUnique({ where: { id: uid } });
+    const existing = await this.prisma.user.findUnique({
+      where: { id: uid },
+      select: { termsAndConditionsAccepted: true },
+    });
     if (existing) {
-      await this.generateTokens(existing.id);
-      const userBase = await this.userService.getUserBase(existing.id);
+      const tokens = await this.generateTokens(uid);
 
-      return userBase;
+      return {
+        id: uid,
+        termsAndConditionsAccepted: existing.termsAndConditionsAccepted,
+        ...tokens,
+      };
     }
 
     // get user record
@@ -77,10 +83,12 @@ export class AuthService {
       },
     });
 
-    await this.generateTokens(newUser.id);
-    const userBase = await this.userService.getUserBase(newUser.id);
-
-    return userBase;
+    const tokens = await this.generateTokens(newUser.id);
+    return {
+      id: newUser.id,
+      termsAndConditionsAccepted: false,
+      ...tokens,
+    };
   }
 
   async refreshToken(userId: string, refreshToken: string): Promise<GeneratedTokensDto> {

@@ -70,6 +70,9 @@ model User {
   creditTransactions      CreditTransaction[]
 
   termsAndConditionsAcceptance TermsAndConditionsAcceptance[]
+  termsAndConditionsAccepted   Boolean                        @default(false)
+
+  notifications Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -86,7 +89,7 @@ model Company {
   membershipId String?            @unique
   membership   CompanyMembership? @relation(fields: [membershipId], references: [id])
 
-  companyInvitation CompanyInvitation[]
+  companyInvitations CompanyInvitation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -118,10 +121,13 @@ model UserMembership {
   name String?
   role MembershipRole @default(USER_LV0)
 
-  membershipStartDate DateTime?
-  membershipEndDate   DateTime?
+  startAt DateTime
+  endAt   DateTime
 
   user User?
+
+  officeId String
+  office   Office @relation(fields: [officeId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -133,10 +139,28 @@ model CompanyMembership {
   name String
   role MembershipRole @default(USER_LV0)
 
-  mbershipStartDate DateTime?
-  membershipEndDate DateTime?
+  startAt DateTime
+  endAt   DateTime
 
   company Company?
+
+  officeId String
+  office   Office @relation(fields: [officeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Office {
+  id String @id @default(uuid())
+
+  name        String
+  description String?
+
+  address String
+
+  userMembership    UserMembership[]
+  companyMembership CompanyMembership[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -153,7 +177,7 @@ model Credit {
   defaultCredit Decimal @default(0.0) @db.Decimal(10, 2)
   currentCredit Decimal @default(0.0) @db.Decimal(10, 2)
 
-  lastRenewalAt DateTime // 정산 날짜.
+  lastRenewalAt DateTime  @default(now()) // 정산 날짜.
   nextRenewalAt DateTime? // 다음 정산 날짜. null인 경우 멤버십 종료 시점.
 
   creditTransactions CreditTransaction[]
@@ -186,6 +210,8 @@ model MeetingRoom {
 
   name        String
   description String?
+  address     String?
+  facilities  String[]
 
   active Boolean @default(true)
 
@@ -198,8 +224,6 @@ model MeetingRoom {
   peakTimeEndAt   DateTime? // utc
 
   reservationInterval Int @default(30) // 최소 예약 시간 (분)
-
-  facilities String[]
 
   meetingRoomReservations MeetingRoomReservation[]
 
@@ -216,8 +240,8 @@ model MeetingRoomReservation {
   userId String?
   user   User?   @relation(fields: [userId], references: [id])
 
-  startAt DateTime // utc
-  endAt   DateTime // utc
+  startAt DateTime
+  endAt   DateTime
 
   totalCredit Decimal @default(0.0) @db.Decimal(10, 2) // reservation interval당 credit
 
@@ -255,6 +279,8 @@ model Notice {
   content String?
   image   String?
 
+  metadata Json?
+
   noticeCategoryId String?
   noticeCategory   NoticeCategory? @relation(fields: [noticeCategoryId], references: [id])
 
@@ -267,6 +293,23 @@ model NoticeCategory {
 
   name    String
   notices Notice[]
+}
+
+model Notification {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  title    String
+  content  String?
+  link     String?
+  metadata Json?
+
+  read Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model TermsAndConditions {
