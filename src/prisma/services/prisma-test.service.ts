@@ -5,8 +5,7 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-
-import { PrismaClient } from '../../generated/client-test';
+import { PrismaClient } from '@prisma/clients/client-test';
 
 @Global()
 @Injectable()

@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "./clients/client"
 }
 
 datasource db {
@@ -26,21 +27,36 @@ enum CompanyRole {
   COMPANY_LV1 // 회사 직원
 }
 
+enum CompanyInvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 enum CreditTransactionType {
   CHARGE // 충전
   SPEND // 사용
   REFUND // 환불
 }
 
+enum TermsAndConditionsType {
+  PRIVACY_POLICY
+  TERMS_OF_SERVICE
+  MARKETING_POLICY
+}
+
 model User {
   id String @id @default(uuid())
 
-  email    String  @unique
-  password String? // hashed password. 소셜로그인의 경우 null
+  email        String  @unique
+  refreshToken String?
+
   name     String?
   phone    String?
+  provider String?
 
-  membershipRole MembershipRole @default(USER_LV0)
+  membershipId String?         @unique
+  membership   UserMembership? @relation(fields: [membershipId], references: [id])
 
   companyId   String?
   company     Company?     @relation(fields: [companyId], references: [id])
@@ -53,6 +69,8 @@ model User {
   invitations             Invitation[]
   creditTransactions      CreditTransaction[]
 
+  termsAndConditionsAcceptance TermsAndConditionsAcceptance[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
@@ -64,6 +82,61 @@ model Company {
 
   name      String?
   employees User[]
+
+  membershipId String?            @unique
+  membership   CompanyMembership? @relation(fields: [membershipId], references: [id])
+
+  companyInvitation CompanyInvitation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model CompanyInvitation {
+  id String @id @default(uuid())
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  userName  String
+  userEmail String
+  userPhone String?
+
+  membershipRole MembershipRole @default(USER_LV1)
+  companyRole    CompanyRole    @default(COMPANY_LV1)
+
+  status  CompanyInvitationStatus @default(PENDING)
+  message String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model UserMembership {
+  id String @id @default(uuid())
+
+  name String?
+  role MembershipRole @default(USER_LV0)
+
+  membershipStartDate DateTime?
+  membershipEndDate   DateTime?
+
+  user User?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model CompanyMembership {
+  id String @id @default(uuid())
+
+  name String
+  role MembershipRole @default(USER_LV0)
+
+  mbershipStartDate DateTime?
+  membershipEndDate DateTime?
+
+  company Company?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -194,4 +267,34 @@ model NoticeCategory {
 
   name    String
   notices Notice[]
+}
+
+model TermsAndConditions {
+  id String @id @default(uuid())
+
+  type     TermsAndConditionsType
+  required Boolean                @default(true)
+
+  acceptance TermsAndConditionsAcceptance[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model TermsAndConditionsAcceptance {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  termsAndConditionsId String
+  termsAndConditions   TermsAndConditions @relation(fields: [termsAndConditionsId], references: [id])
+
+  accepted   Boolean   @default(false)
+  acceptedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, termsAndConditionsId])
 }

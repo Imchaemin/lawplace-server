@@ -1,5 +1,6 @@
 import { createZodDto } from '@anatine/zod-nestjs';
 import { extendApi } from '@anatine/zod-openapi';
+import { Request } from 'express';
 import { z } from 'zod';
 
 export const PaginateSchema = extendApi(
@@ -160,3 +161,11 @@ export const PaginateMetadataSchema = extendApi(
 );
 export type PaginateMetadata = z.infer<typeof PaginateMetadataSchema>;
 export class PaginateMetadataDto extends createZodDto(PaginateMetadataSchema) {}
+
+export type ReqWithAuth = Request & {
+  auth?: Auth;
+};
+
+export type Auth = {
+  userId: string;
+};

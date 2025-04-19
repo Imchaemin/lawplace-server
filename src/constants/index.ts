@@ -5,3 +5,17 @@ export const IS_DEV = ENV === 'dev';
 export const IS_PROD = ENV === 'prod';
 
 export const DISABLE_CRON = process.env.DISABLE_CRON === 'true';
+
+export const FE_URL = IS_LOCAL ? 'http://localhost:3000' : IS_DEV ? '' : '';
+export const BE_URL = IS_LOCAL ? 'http://localhost:8080' : IS_DEV ? '' : '';
+
+export const JWT_SECRET = process.env.JWT_SECRET;
+export const JWT_DOMAIN = IS_LOCAL ? 'localhost' : IS_DEV ? '' : '';
+
+export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+
+export const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID;
+export const APPLE_TEAM_ID = process.env.APPLE_TEAM_ID;
+export const APPLE_KEY_ID = process.env.APPLE_KEY_ID;
+export const APPLE_PRIVATE_KEY = process.env.APPLE_PRIVATE_KEY;

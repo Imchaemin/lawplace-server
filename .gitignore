@@ -438,7 +438,7 @@ ecosystem.config.js
 .vscode
 *.pem
 
-cloud-storage.json
-firestore.json
-
 src/generated
+src/secrets
+
+prisma/clients
