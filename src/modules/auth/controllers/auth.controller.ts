@@ -3,7 +3,6 @@ import {
   BadRequestException,
   Body,
   Controller,
-  HttpStatus,
   Post,
   UseInterceptors,
   UsePipes,
@@ -12,13 +11,7 @@ import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { PrivateCorsInterceptor } from '@/interceptors/cors.interceptor';
 
-import {
-  GeneratedTokensDto,
-  RefreshReqBodyDto,
-  SigninupReqBodyDto,
-  SignoutReqBodyDto,
-  SignoutResDto,
-} from '../dtos/auth.dto';
+import { GeneratedTokensDto, RefreshReqBodyDto, SigninupReqBodyDto } from '../dtos/auth.dto';
 import { AuthService } from '../services/auth.service';
 
 @ApiTags('AUTH')
@@ -37,11 +30,6 @@ export class AuthController {
   async signinup(@Body() body: SigninupReqBodyDto) {
     if (!body.idToken) throw new BadRequestException('idToken is required');
     return this.authService.signinup(body.idToken);
-  }
-
-  @Post('signinup/callback')
-  async signinupCallback(@Body() body: SigninupReqBodyDto): Promise<GeneratedTokensDto> {
-    return this.authService.signinupCallback(body.idToken);
   }
 
   @Post('refresh-token')

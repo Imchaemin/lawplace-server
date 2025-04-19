@@ -83,26 +83,6 @@ export class AuthService {
     return userBase;
   }
 
-  async signinupCallback(idToken: string) {
-    const decoded = await this.verifyIdToken(idToken);
-    const user = await this.prisma.user.findUnique({
-      where: { id: decoded.uid },
-      include: {
-        termsAndConditionsAcceptance: {
-          include: {
-            termsAndConditions: true,
-          },
-        },
-      },
-    });
-    const accepted = user.termsAndConditionsAcceptance
-      .filter(acceptance => acceptance.termsAndConditions.required)
-      .every(acceptance => acceptance.accepted);
-
-    if (!accepted) return { redirect: '/terms' };
-    return { redirect: '/' };
-  }
-
   async refreshToken(userId: string, refreshToken: string): Promise<GeneratedTokensDto> {
     let payload: JwtPayload;
     try {

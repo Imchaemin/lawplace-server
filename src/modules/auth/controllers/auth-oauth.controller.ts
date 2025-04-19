@@ -31,7 +31,7 @@ export class AuthController {
     } = userBase;
 
     const baseDeepLink = new URL(decodeURIComponent(state));
-    const targetDeepLink = !termsAndConditionsAcceptance ? `${baseDeepLink}/terms` : baseDeepLink;
+    const targetDeepLink = !termsAndConditionsAcceptance ? `lawplace://terms` : baseDeepLink;
 
     const redirectUrl = new URL(targetDeepLink);
     redirectUrl.searchParams.set('accessToken', accessToken);
@@ -58,7 +58,7 @@ export class AuthController {
     } = userBase;
 
     const baseDeepLink = new URL(decodeURIComponent(state));
-    const targetDeepLink = !termsAndConditionsAcceptance ? `${baseDeepLink}/terms` : baseDeepLink;
+    const targetDeepLink = !termsAndConditionsAcceptance ? `lawplace://terms` : baseDeepLink;
 
     const redirectUrl = new URL(targetDeepLink);
     redirectUrl.searchParams.set('accessToken', accessToken);
