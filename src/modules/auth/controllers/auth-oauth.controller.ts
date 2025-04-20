@@ -1,4 +1,5 @@
-import { Controller, Get, HttpException, HttpStatus, Query, Res } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Query, Res } from '@nestjs/common';
+import { UserRole } from '@prisma/clients/client';
 import { Response } from 'express';
 
 import { AuthService } from '../services/auth.service';
@@ -18,15 +19,19 @@ export class AuthOauthController {
     @Res() res: Response
   ) {
     if (!code) {
-      throw new HttpException('Authorization code missing', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException({
+        type: 'BAD_REQUEST',
+        message: 'authorization code missing',
+      });
     }
 
     const googleTokens = await this.authOauthService.exchangeGoogleCode(code);
     const userAuth = await this.authService.signinup(googleTokens.id_token);
-    const { termsAndConditionsAccepted, accessToken, refreshToken } = userAuth;
+    const { termsAndConditionsAccepted, accessToken, refreshToken, role } = userAuth;
 
     const baseDeepLink = new URL(decodeURIComponent(state));
-    const targetDeepLink = !termsAndConditionsAccepted ? `lawplace://terms` : baseDeepLink;
+    const targetDeepLink =
+      role === UserRole.USER && !termsAndConditionsAccepted ? `lawplace://terms` : baseDeepLink;
 
     const redirectUrl = new URL(targetDeepLink);
     redirectUrl.searchParams.set('accessToken', accessToken);
@@ -42,15 +47,19 @@ export class AuthOauthController {
     @Res() res: Response
   ) {
     if (!code) {
-      throw new HttpException('Authorization code missing', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException({
+        type: 'BAD_REQUEST',
+        message: 'authorization code missing',
+      });
     }
 
     const appleTokens = await this.authOauthService.exchangeAppleCode(code);
     const userAuth = await this.authService.signinup(appleTokens.id_token);
-    const { termsAndConditionsAccepted, accessToken, refreshToken } = userAuth;
+    const { termsAndConditionsAccepted, accessToken, refreshToken, role } = userAuth;
 
     const baseDeepLink = new URL(decodeURIComponent(state));
-    const targetDeepLink = !termsAndConditionsAccepted ? `lawplace://terms` : baseDeepLink;
+    const targetDeepLink =
+      role === UserRole.USER && !termsAndConditionsAccepted ? `lawplace://terms` : baseDeepLink;
 
     const redirectUrl = new URL(targetDeepLink);
     redirectUrl.searchParams.set('accessToken', accessToken);

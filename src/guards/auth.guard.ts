@@ -21,7 +21,10 @@ export abstract class BaseAuthGuard implements CanActivate {
     const decoded = this.validateToken(token);
 
     if (!this.validateDecoded(decoded)) {
-      throw new UnauthorizedException('Invalid authentication token');
+      throw new UnauthorizedException({
+        type: 'UNAUTHORIZED',
+        message: 'invalid authentication token, invalid token payload',
+      });
     }
 
     request.auth = decoded;
@@ -36,20 +39,29 @@ export abstract class BaseAuthGuard implements CanActivate {
     try {
       const payload = verify(token, JWT_SECRET);
       if (typeof payload === 'string') {
-        throw new Error('Unexpected token payload type');
+        throw new UnauthorizedException({
+          type: 'UNAUTHORIZED',
+          message: 'invalid authentication token, invalid token type',
+        });
       }
       return payload as JwtPayload;
     } catch {
-      throw new UnauthorizedException('Invalid authentication token');
+      throw new UnauthorizedException({
+        type: 'UNAUTHORIZED',
+        message: 'invalid authentication token',
+      });
     }
   }
 }
 
 @Injectable()
-export class AuthJwtGuard extends BaseAuthGuard {
+export class AuthGuard extends BaseAuthGuard {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected handleNoToken(_request: RequestWithAuth): boolean {
-    throw new UnauthorizedException('Authorization token is missing');
+    throw new UnauthorizedException({
+      type: 'UNAUTHORIZED',
+      message: 'authorization token is missing',
+    });
   }
 
   protected validateDecoded(decoded: JwtPayload): boolean {

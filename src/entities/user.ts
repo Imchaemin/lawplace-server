@@ -1,4 +1,4 @@
-import { CreditTransactionType } from '@prisma/clients/client';
+import { CompanyRole, CreditTransactionType, UserRole } from '@prisma/clients/client';
 import { z } from 'zod';
 
 import { CompanySchema } from './company';
@@ -12,12 +12,14 @@ import { TermsAndConditionsSchema } from './terms-conditions';
 export const UserAuthSchema = z
   .object({
     id: z.string(),
+    role: z.nativeEnum(UserRole),
     termsAndConditionsAccepted: z.boolean(),
     accessToken: z.string(),
     refreshToken: z.string(),
   })
   .transform(data => ({
     id: data.id,
+    role: data.role,
     termsAndConditionsAccepted: data.termsAndConditionsAccepted,
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
@@ -27,6 +29,7 @@ export type UserAuth = z.infer<typeof UserAuthSchema>;
 export const UserSchema = z
   .object({
     id: z.string(),
+    role: z.nativeEnum(UserRole),
     email: z.string(),
     name: z.string(),
     phone: z.string(),
@@ -34,10 +37,12 @@ export const UserSchema = z
     termsAndConditionsAccepted: z.boolean(),
     membership: UserMembershipSchema.nullable(),
     company: CompanySchema.nullable(),
+    companyRole: z.nativeEnum(CompanyRole).nullable(),
     credit: CreditSchema.nullable(),
   })
   .transform(data => ({
     id: data.id,
+    role: data.role,
     email: data.email,
     name: data.name,
     phone: data.phone,
@@ -45,6 +50,7 @@ export const UserSchema = z
     termsAndConditionsAccepted: data.termsAndConditionsAccepted,
     membership: data.membership,
     company: data.company,
+    companyRole: data.companyRole,
     credit: data.credit,
   }));
 export type User = z.infer<typeof UserSchema>;

@@ -8,11 +8,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum MembershipRole {
+enum UserRole {
+  USER
   ADMIN
+}
 
-  INACTIVE // 정지
-
+enum MembershipRole {
   USER_LV0 // Guest, 멤버십 만료 등. 계정은 있지만 권한은 없는 유저
   USER_LV1 // 멤버십 활성화 유저. Lounge 멤버십 유저
   USER_LV2 // 멤버십 활성화 유저. Private Office 멤버십 유저
@@ -20,9 +21,6 @@ enum MembershipRole {
 
 enum CompanyRole {
   COMPANY_ADMIN // 회사 관리자. 사원 추가 삭제, 충전 등 결제시스템 처리
-
-  INACTIVE // 정지
-
   COMPANY_LV0 // 퇴사자, 멤버십 만료 등. 계정은 있지만 권한은 없는 유저
   COMPANY_LV1 // 회사 직원
 }
@@ -47,6 +45,8 @@ enum TermsAndConditionsType {
 
 model User {
   id String @id @default(uuid())
+
+  role UserRole @default(USER)
 
   email        String  @unique
   refreshToken String?

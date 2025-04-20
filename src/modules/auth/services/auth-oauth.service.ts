@@ -31,9 +31,10 @@ export class AuthOauthService {
       );
       return data;
     } catch (err: any) {
-      throw new InternalServerErrorException(
-        `Google token exchange failed: ${err.response?.data || err.message}`
-      );
+      throw new InternalServerErrorException({
+        type: 'INTERNAL_SERVER_ERROR',
+        message: `Google token exchange failed: ${err.response?.data || err.message}`,
+      });
     }
   }
 
@@ -53,9 +54,10 @@ export class AuthOauthService {
       );
       return data;
     } catch (err: any) {
-      throw new InternalServerErrorException(
-        `Apple token exchange failed: ${err.response?.data || err.message}`
-      );
+      throw new InternalServerErrorException({
+        type: 'INTERNAL_SERVER_ERROR',
+        message: `Apple token exchange failed: ${err.response?.data || err.message}`,
+      });
     }
   }
 

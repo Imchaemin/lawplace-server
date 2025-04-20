@@ -1,11 +1,17 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { CompanyRole, UserRole } from '@prisma/clients/client';
 import * as bcrypt from 'bcrypt';
 import * as admin from 'firebase-admin';
 
 import { JwtPayload } from '@/dtos/auth.dto';
+import {
+  CompanyMembership,
+  CompanyMembershipSchema,
+  UserMembership,
+  UserMembershipSchema,
+} from '@/entities/membership';
 import { UserAuth } from '@/entities/user';
-import { UserTermsConditionsService } from '@/modules/user/services/user-terms-conditions.service';
 import { PrismaService } from '@/prisma/services/prisma.service';
 
 import { GeneratedTokensDto } from '../dtos/auth.dto';
@@ -15,7 +21,6 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly userTermsConditionsService: UserTermsConditionsService,
     @Inject('firebase') private readonly firebase: admin.app.App
   ) {}
 
@@ -23,12 +28,29 @@ export class AuthService {
     try {
       return await this.firebase.auth().verifyIdToken(idToken);
     } catch {
-      throw new UnauthorizedException('Invalid firebase id token');
+      throw new UnauthorizedException({
+        type: 'UNAUTHORIZED',
+        message: 'invalid firebase id token',
+      });
     }
   }
 
-  private async generateTokens(userId: string) {
-    const payload = { sub: userId };
+  private async generateTokens(
+    userId: string,
+    role: UserRole,
+    termsAndConditionsAccepted: boolean,
+    userMembership?: UserMembership,
+    companyMembership?: CompanyMembership,
+    companyRole?: CompanyRole
+  ) {
+    const payload = {
+      sub: userId,
+      role,
+      termsAndConditionsAccepted,
+      userMembership,
+      companyMembership,
+      companyRole,
+    };
 
     const accessToken = this.jwtService.sign(payload, { expiresIn: '7d' });
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '5m' });
@@ -54,13 +76,30 @@ export class AuthService {
     // check user
     const existing = await this.prisma.user.findUnique({
       where: { id: uid },
-      select: { termsAndConditionsAccepted: true },
+      select: {
+        role: true,
+        termsAndConditionsAccepted: true,
+        membership: true,
+        company: true,
+        companyRole: true,
+      },
     });
     if (existing) {
-      const tokens = await this.generateTokens(uid);
+      const userMembership = UserMembershipSchema.parse(existing.membership);
+      const companyMembership = CompanyMembershipSchema.parse(existing.company);
+
+      const tokens = await this.generateTokens(
+        uid,
+        existing.role,
+        existing.termsAndConditionsAccepted,
+        userMembership,
+        companyMembership,
+        existing.companyRole
+      );
 
       return {
         id: uid,
+        role: existing.role,
         termsAndConditionsAccepted: existing.termsAndConditionsAccepted,
         ...tokens,
       };
@@ -83,9 +122,17 @@ export class AuthService {
       },
     });
 
-    const tokens = await this.generateTokens(newUser.id);
+    const tokens = await this.generateTokens(
+      newUser.id,
+      UserRole.USER,
+      false,
+      undefined,
+      undefined,
+      undefined
+    );
     return {
       id: newUser.id,
+      role: UserRole.USER,
       termsAndConditionsAccepted: false,
       ...tokens,
     };
@@ -96,25 +143,57 @@ export class AuthService {
     try {
       payload = this.jwtService.verify<JwtPayload>(refreshToken);
     } catch {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException({
+        type: 'UNAUTHORIZED',
+        message: 'invalid refresh token',
+      });
     }
 
     const userIdFromRefreshToken = payload.sub;
     if (userIdFromRefreshToken !== userId) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException({
+        type: 'UNAUTHORIZED',
+        message: 'refresh token mismatch',
+      });
     }
 
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || user.refreshToken) {
-      throw new UnauthorizedException('No refresh token stored');
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        role: true,
+        refreshToken: true,
+        termsAndConditionsAccepted: true,
+        membership: true,
+        company: true,
+        companyRole: true,
+      },
+    });
+    if (!user || !user.refreshToken) {
+      throw new UnauthorizedException({
+        type: 'UNAUTHORIZED',
+        message: 'no refresh token stored',
+      });
     }
 
     const isMatch = await bcrypt.compare(refreshToken, user.refreshToken);
     if (!isMatch) {
-      throw new UnauthorizedException('Refresh token mismatch');
+      throw new UnauthorizedException({
+        type: 'UNAUTHORIZED',
+        message: 'refresh token mismatch',
+      });
     }
 
-    const tokens = await this.generateTokens(userId);
+    const userMembership = UserMembershipSchema.parse(user.membership);
+    const companyMembership = CompanyMembershipSchema.parse(user.company);
+
+    const tokens = await this.generateTokens(
+      userId,
+      user.role,
+      user.termsAndConditionsAccepted,
+      userMembership,
+      companyMembership,
+      user.companyRole
+    );
     return tokens;
   }
 }

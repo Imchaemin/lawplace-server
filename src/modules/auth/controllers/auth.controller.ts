@@ -1,9 +1,9 @@
 import { ZodValidationPipe } from '@anatine/zod-nestjs';
 import {
-  BadRequestException,
   Body,
   Controller,
   Post,
+  UnauthorizedException,
   UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
@@ -28,7 +28,11 @@ export class AuthController {
     type: GeneratedTokensDto,
   })
   async refresh(@Body() body: RefreshReqBodyDto) {
-    if (!body.refreshToken) throw new BadRequestException('refreshToken is required');
+    if (!body.refreshToken)
+      throw new UnauthorizedException({
+        type: 'UNAUTHORIZED',
+        message: 'refreshToken is required',
+      });
     return this.authService.refreshToken(body.userId, body.refreshToken);
   }
 }
