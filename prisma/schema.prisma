@@ -41,6 +41,7 @@ enum TermsAndConditionsType {
   PRIVACY_POLICY
   TERMS_OF_SERVICE
   MARKETING_POLICY
+  PUSH_NOTIFICATION
 }
 
 model User {
@@ -72,7 +73,7 @@ model User {
   termsAndConditionsAcceptance TermsAndConditionsAcceptance[]
   termsAndConditionsAccepted   Boolean                        @default(false)
 
-  notifications Notification[]
+  notificationReads NotificationRead[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -211,7 +212,9 @@ model MeetingRoom {
   name        String
   description String?
   address     String?
-  facilities  String[]
+  image       String?
+
+  facilities String[]
 
   active Boolean @default(true)
 
@@ -277,6 +280,7 @@ model Notice {
 
   url     String?
   content String?
+  html    String?
   image   String?
 
   metadata Json?
@@ -298,18 +302,45 @@ model NoticeCategory {
 model Notification {
   id String @id @default(uuid())
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
   title    String
   content  String?
   link     String?
   metadata Json?
 
+  notificationCategoryId String?
+  notificationCategory   NotificationCategory? @relation(fields: [notificationCategoryId], references: [id])
+
+  target String?
+
+  notificationReads NotificationRead[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model NotificationCategory {
+  id String @id @default(uuid())
+
+  name          String
+  icon          String?
+  notifications Notification[]
+}
+
+model NotificationRead {
+  id String @id @default(uuid())
+
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
   read Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, notificationId])
 }
 
 model TermsAndConditions {

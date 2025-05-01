@@ -29,3 +29,13 @@ export const CompanyInvitationSchema = z.object({
   message: z.string().nullable(),
 });
 export type CompanyInvitation = z.infer<typeof CompanyInvitationSchema>;
+
+export const CompanyEmployeeSchema = z.object({
+  id: z.string(),
+
+  name: z.string(),
+  email: z.string(),
+
+  status: z.nativeEnum(CompanyInvitationStatus),
+});
+export type CompanyEmployee = z.infer<typeof CompanyEmployeeSchema>;

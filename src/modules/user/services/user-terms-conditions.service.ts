@@ -61,4 +61,29 @@ export class UserTermsConditionsService {
       data: { termsAndConditionsAccepted },
     });
   }
+
+  async acceptTermsAndConditionsBatch(
+    userId: string,
+    termsAndConditions: { id: string; accepted: boolean }[]
+  ) {
+    for (const data of termsAndConditions) {
+      const acceptedAt = data.accepted ? new Date() : null;
+
+      await this.prisma.termsAndConditionsAcceptance.upsert({
+        where: { userId_termsAndConditionsId: { userId, termsAndConditionsId: data.id } },
+        update: { accepted: data.accepted, acceptedAt },
+        create: { userId, termsAndConditionsId: data.id, accepted: data.accepted, acceptedAt },
+      });
+    }
+
+    const userTermsAndConditionsAcceptance = await this.getUserTermsAndConditionsAcceptance(userId);
+    const termsAndConditionsAccepted = userTermsAndConditionsAcceptance
+      .filter(acceptance => acceptance.termsAndConditions.required)
+      .every(acceptance => acceptance.accepted);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { termsAndConditionsAccepted },
+    });
+  }
 }

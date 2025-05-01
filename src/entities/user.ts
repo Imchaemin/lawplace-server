@@ -1,12 +1,17 @@
-import { CompanyRole, CreditTransactionType, UserRole } from '@prisma/clients/client';
-import { z } from 'zod';
+import {
+  CompanyRole,
+  CreditTransactionType,
+  MembershipRole,
+  UserRole,
+} from '@prisma/clients/client';
+import { nativeEnum, z } from 'zod';
 
 import { CompanySchema } from './company';
 import { CreditSchema } from './credit';
 import { DecimalSchema } from './decimal';
 import { MeetingRoomSimpleSchema } from './meeting-room';
 import { UserMembershipSchema } from './membership';
-import { NotificationSchema } from './notification';
+import { NotificationCategorySchema } from './notification';
 import { TermsAndConditionsSchema } from './terms-conditions';
 
 export const UserAuthSchema = z
@@ -35,9 +40,11 @@ export const UserSchema = z
     phone: z.string(),
     provider: z.string(),
     termsAndConditionsAccepted: z.boolean(),
+    currentMembership: nativeEnum(MembershipRole),
     membership: UserMembershipSchema.nullable(),
     company: CompanySchema.nullable(),
     companyRole: z.nativeEnum(CompanyRole).nullable(),
+    companyEmployeeCount: z.number().nullable(),
     credit: CreditSchema.nullable(),
   })
   .transform(data => ({
@@ -48,9 +55,11 @@ export const UserSchema = z
     phone: data.phone,
     provider: data.provider,
     termsAndConditionsAccepted: data.termsAndConditionsAccepted,
+    currentMembership: data.currentMembership,
     membership: data.membership,
     company: data.company,
     companyRole: data.companyRole,
+    companyEmployeeCount: data.companyEmployeeCount,
     credit: data.credit,
   }));
 export type User = z.infer<typeof UserSchema>;
@@ -91,5 +100,19 @@ export type UserTermsAndConditionsAcceptance = z.infer<
   typeof UserTermsAndConditionsAcceptanceSchema
 >;
 
-export const UserNotificationSchema = NotificationSchema;
+export const UserNotificationSchema = z.object({
+  id: z.string(),
+
+  title: z.string(),
+  content: z.string().nullable(),
+  link: z.string().nullable(),
+  target: z.string().nullable(),
+
+  metadata: z.record(z.string(), z.any()).nullable(),
+  notificationCategory: NotificationCategorySchema,
+
+  createdAt: z.date(),
+
+  read: z.boolean(),
+});
 export type UserNotification = z.infer<typeof UserNotificationSchema>;

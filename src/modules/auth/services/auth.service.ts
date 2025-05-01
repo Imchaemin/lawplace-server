@@ -40,6 +40,7 @@ export class AuthService {
     role: UserRole,
     termsAndConditionsAccepted: boolean,
     userMembership?: UserMembership,
+    companyId?: string,
     companyMembership?: CompanyMembership,
     companyRole?: CompanyRole
   ) {
@@ -48,6 +49,7 @@ export class AuthService {
       role,
       termsAndConditionsAccepted,
       userMembership,
+      companyId,
       companyMembership,
       companyRole,
     };
@@ -93,6 +95,7 @@ export class AuthService {
         existing.role,
         existing.termsAndConditionsAccepted,
         userMembership,
+        existing.company?.id,
         companyMembership,
         existing.companyRole
       );
@@ -191,6 +194,7 @@ export class AuthService {
       user.role,
       user.termsAndConditionsAccepted,
       userMembership,
+      user.company?.id,
       companyMembership,
       user.companyRole
     );

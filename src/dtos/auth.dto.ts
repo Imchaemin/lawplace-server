@@ -14,6 +14,8 @@ export interface JwtPayload extends DefaultJwtPayload {
   termsAndConditionsAccepted: boolean;
 
   userMembership?: UserMembership;
+
+  companyId?: string;
   companyMembership?: CompanyMembership;
   companyRole?: CompanyRole;
 }

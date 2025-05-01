@@ -7,11 +7,11 @@ import {
   UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 
 import { PrivateCorsInterceptor } from '@/interceptors/cors.interceptor';
 
-import { GeneratedTokensDto, RefreshReqBodyDto } from '../dtos/auth.dto';
+import { RefreshReqBodyDto } from '../dtos/auth.dto';
 import { AuthService } from '../services/auth.service';
 
 @ApiTags('AUTH')
@@ -22,11 +22,6 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('refresh-token')
-  @ApiOperation({ summary: '토큰 갱신' })
-  @ApiOkResponse({
-    description: '새로운 토큰 반환',
-    type: GeneratedTokensDto,
-  })
   async refresh(@Body() body: RefreshReqBodyDto) {
     if (!body.refreshToken)
       throw new UnauthorizedException({
