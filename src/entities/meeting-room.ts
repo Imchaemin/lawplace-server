@@ -42,9 +42,9 @@ export const MeetingRoomSchema = z.object({
   credit: DecimalSchema,
 
   enablePeakTime: z.boolean(),
-  peakTimeCredit: DecimalSchema,
-  peakTimeStartAt: z.date().nullable(),
-  peakTimeEndAt: z.date().nullable(),
+  peakTimeCredit: DecimalSchema.nullable(),
+  peakTimeStartAt: z.string().nullable(),
+  peakTimeEndAt: z.string().nullable(),
 
   reservationInterval: z.number(),
   reservations: z.array(MeetingRoomReservationSchema).nullable(),

@@ -1,28 +1,44 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { SetMetadata } from '@nestjs/common';
-import { MembershipRole as PrismaMembershipRole, UserRole } from '@prisma/clients/client';
+import { MembershipRole as PrismaMembershipRole, UserRole } from '@prisma/client';
 
 import { RequestWithAuth } from '@/dtos/auth.dto';
 import { getRoleLevel } from '@/libs/membership';
+import { PrismaService } from '@/prisma/services/prisma.service';
 
 export const MembershipRole = (role: PrismaMembershipRole) => SetMetadata('role', role);
 
 @Injectable()
 export class MembershipGuard implements CanActivate {
-  canActivate(ctx: ExecutionContext) {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async canActivate(ctx: ExecutionContext) {
     const req = ctx.switchToHttp().getRequest<RequestWithAuth>();
     const { auth } = req;
 
+    const user = await this.prisma.user.findUnique({
+      where: { id: auth.sub },
+      select: {
+        role: true,
+        membership: true,
+        company: {
+          select: {
+            membership: true,
+          },
+        },
+      },
+    });
+
     // admin always allowed
-    if (auth.role === UserRole.ADMIN) return true;
+    if (user.role === UserRole.ADMIN) return true;
     const requiredRole = Reflect.getMetadata('role', ctx.getHandler()) as PrismaMembershipRole;
 
     // no required role
     if (!requiredRole) return true;
 
     // user has no membership role
-    const userMembershipRole = auth.userMembership?.role;
-    const companyMembershipRole = auth.companyMembership?.role;
+    const userMembershipRole = user.membership;
+    const companyMembershipRole = user.company?.membership;
 
     if (!userMembershipRole && !companyMembershipRole) {
       throw new ForbiddenException({
@@ -31,8 +47,8 @@ export class MembershipGuard implements CanActivate {
       });
     }
     const membershipLevel = Math.max(
-      getRoleLevel(userMembershipRole || PrismaMembershipRole.USER_LV0),
-      getRoleLevel(companyMembershipRole || PrismaMembershipRole.USER_LV0)
+      getRoleLevel(userMembershipRole?.role || PrismaMembershipRole.USER_LV0),
+      getRoleLevel(companyMembershipRole?.role || PrismaMembershipRole.USER_LV0)
     );
     const requiredLevel = getRoleLevel(requiredRole);
 

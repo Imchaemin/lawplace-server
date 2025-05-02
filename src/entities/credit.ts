@@ -1,4 +1,4 @@
-import { CreditTransactionType } from '@prisma/clients/client';
+import { CreditTransactionType } from '@prisma/client';
 import { z } from 'zod';
 
 import { DecimalSchema } from './decimal';

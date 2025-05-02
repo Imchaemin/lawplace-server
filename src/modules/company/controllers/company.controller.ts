@@ -10,7 +10,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CompanyRole as PrismaCompanyRole } from '@prisma/clients/client';
+import { CompanyRole as PrismaCompanyRole } from '@prisma/client';
 
 import { RequestWithAuth } from '@/dtos/auth.dto';
 import { AuthGuard } from '@/guards/auth.guard';
@@ -26,13 +26,14 @@ import { CompanyService } from '../services/company.service';
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 
-  @Get('employees')
+  @Get(':companyId/employees')
   @UseGuards(AuthGuard)
-  async getEmployees(@Req() req: RequestWithAuth) {
-    return this.companyService.getEmployees(req.auth.companyId);
+  @CompanyRole(PrismaCompanyRole.COMPANY_LV1)
+  async getEmployees(@Param() params: { companyId: string }) {
+    return this.companyService.getEmployees(params.companyId);
   }
 
-  @Delete('employees/:employeeId')
+  @Delete(':companyId/employees/:employeeId')
   @UseGuards(AuthGuard)
   @CompanyRole(PrismaCompanyRole.COMPANY_ADMIN)
   async deleteEmployee(@Req() req: RequestWithAuth, @Param() params: { employeeId: string }) {

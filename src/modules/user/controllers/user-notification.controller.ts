@@ -22,12 +22,12 @@ import { UserNotificationService } from '../services/user-notification.service';
 
 @ApiTags('USER')
 @UseInterceptors(PrivateCorsInterceptor)
-@Controller('user')
+@Controller('user/notifications')
 @UsePipes(ZodValidationPipe)
 export class UserNotificationController {
   constructor(private readonly userNotificationService: UserNotificationService) {}
 
-  @Get('notifications')
+  @Get('')
   @UseGuards(AuthGuard)
   async getUserNotifications(
     @Req() req: RequestWithAuth,
@@ -36,7 +36,7 @@ export class UserNotificationController {
     return this.userNotificationService.getUserNotifications(req.auth.sub, query);
   }
 
-  @Patch('notifications/read')
+  @Patch('/read')
   @UseGuards(AuthGuard)
   async readNotification(
     @Req() req: RequestWithAuth,

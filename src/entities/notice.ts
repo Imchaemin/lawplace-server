@@ -18,7 +18,7 @@ export const NoticeSchema = z.object({
 
   metadata: z.record(z.string(), z.any()).nullable(),
 
-  noticeCategory: NoticeCategorySchema,
+  noticeCategory: NoticeCategorySchema.nullable(),
 
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -34,7 +34,7 @@ export const NoticeSimpleSchema = z.object({
   content: z.string().nullable(),
   image: z.string().nullable(),
 
-  noticeCategory: NoticeCategorySchema,
+  noticeCategory: NoticeCategorySchema.nullable(),
 
   createdAt: z.date(),
   updatedAt: z.date(),

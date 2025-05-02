@@ -4,7 +4,7 @@ import { ApiTags } from '@nestjs/swagger';
 import {
   CompanyRole as PrismaCompanyRole,
   MembershipRole as PrismaMembershipRole,
-} from '@prisma/clients/client';
+} from '@prisma/client';
 
 import { RequestWithAuth } from '@/dtos/auth.dto';
 import { AuthGuard } from '@/guards/auth.guard';
@@ -16,12 +16,12 @@ import { CompanyInvitationService } from '../services/company-invitation.service
 
 @ApiTags('COMPANY')
 @UseInterceptors(PrivateCorsInterceptor)
-@Controller('company/invitation')
+@Controller('company')
 @UsePipes(ZodValidationPipe)
 export class CompanyInvitationController {
   constructor(private readonly companyInvitationService: CompanyInvitationService) {}
 
-  @Post('invite')
+  @Post(':companyId/invite')
   @UseGuards(AuthGuard)
   @MembershipRole(PrismaMembershipRole.USER_LV1)
   @CompanyRole(PrismaCompanyRole.COMPANY_ADMIN)

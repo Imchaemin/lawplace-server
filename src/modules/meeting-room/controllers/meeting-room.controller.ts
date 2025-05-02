@@ -1,8 +1,18 @@
 import { ZodValidationPipe } from '@anatine/zod-nestjs';
-import { Body, Controller, Get, Post, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+  UseInterceptors,
+  UsePipes,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { MembershipRole as PrismaMembershipRole } from '@prisma/clients/client';
+import { MembershipRole as PrismaMembershipRole } from '@prisma/client';
 
+import { RequestWithAuth } from '@/dtos/auth.dto';
 import { AuthGuard } from '@/guards/auth.guard';
 import { MembershipRole } from '@/guards/membership-role.guard';
 import { PrivateCorsInterceptor } from '@/interceptors/cors.interceptor';
@@ -20,9 +30,9 @@ export class MeetingRoomController {
   @Post('reserve')
   @UseGuards(AuthGuard)
   @MembershipRole(PrismaMembershipRole.USER_LV1)
-  async reserveMeetingRoom(@Body() body: ReserveMeetingRoomBodyDto) {
+  async reserveMeetingRoom(@Req() req: RequestWithAuth, @Body() body: ReserveMeetingRoomBodyDto) {
     return this.meetingRoomService.reserveMeetingRoom(
-      body.userId,
+      req.auth.sub,
       body.meetingRoomId,
       body.startAt,
       body.endAt

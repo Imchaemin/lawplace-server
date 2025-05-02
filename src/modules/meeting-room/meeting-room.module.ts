@@ -2,12 +2,15 @@ import { Module } from '@nestjs/common';
 
 import { PrismaModule } from '@/prisma/prisma.module';
 
-import { MeetingRoomController } from './controllers/meeting-room.controller';
+import {
+  MeetingRoomController,
+  MeetingRoomsController,
+} from './controllers/meeting-room.controller';
 import { MeetingRoomService } from './services/meeting-room.service';
 
 @Module({
   imports: [PrismaModule],
-  controllers: [MeetingRoomController],
+  controllers: [MeetingRoomController, MeetingRoomsController],
   providers: [MeetingRoomService],
   exports: [MeetingRoomService],
 })

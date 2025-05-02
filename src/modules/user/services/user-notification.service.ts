@@ -30,6 +30,12 @@ export class UserNotificationService {
         {
           createdAt: { gte: sevenDaysAgo },
         },
+        {
+          OR: [
+            { target: null }, // target이 null인 경우 (모든 사용자용)
+            { target: userId }, // target이 특정 userId와 일치하는 경우
+          ],
+        },
       ],
     };
     const notifications = await this.prisma.notification.findMany({
@@ -75,18 +81,12 @@ export class UserNotificationService {
         ? undefined
         : notifications?.[notifications.length - 1]?.id;
 
-    const res = notifications
-      .filter(notification => {
-        if (!notification.target) return true; // all
-        if (notification.target === userId) return true; // target
-        return false;
+    const res = notifications.map(notification =>
+      UserNotificationSchema.parse({
+        ...notification,
+        read: notification.notificationReads?.[0]?.read || false,
       })
-      .map(notification =>
-        UserNotificationSchema.parse({
-          ...notification,
-          read: notification.notificationReads?.[0]?.read || false,
-        })
-      );
+    );
 
     const paginateMetadata = PaginateMetadataSchema.parse({
       totalCount,

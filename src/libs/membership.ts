@@ -1,5 +1,5 @@
 import { InternalServerErrorException } from '@nestjs/common';
-import { MembershipRole } from '@prisma/clients/client';
+import { MembershipRole } from '@prisma/client';
 
 export const getRoleLevel = (role: MembershipRole): number => {
   const roleLevels = {

@@ -1,4 +1,4 @@
-import { TermsAndConditionsType } from '@prisma/clients/client';
+import { TermsAndConditionsType } from '@prisma/client';
 import { z } from 'zod';
 
 export const TermsAndConditionsSchema = z.object({

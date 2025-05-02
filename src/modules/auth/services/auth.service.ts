@@ -1,16 +1,10 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { CompanyRole, UserRole } from '@prisma/clients/client';
-import * as bcrypt from 'bcrypt';
+import { SHA256 } from 'crypto-js';
 import * as admin from 'firebase-admin';
 
+import { JWT_SECRET } from '@/constants';
 import { JwtPayload } from '@/dtos/auth.dto';
-import {
-  CompanyMembership,
-  CompanyMembershipSchema,
-  UserMembership,
-  UserMembershipSchema,
-} from '@/entities/membership';
 import { UserAuth } from '@/entities/user';
 import { PrismaService } from '@/prisma/services/prisma.service';
 
@@ -24,7 +18,7 @@ export class AuthService {
     @Inject('firebase') private readonly firebase: admin.app.App
   ) {}
 
-  private async verifyIdToken(idToken: string) {
+  async verifyIdToken(idToken: string) {
     try {
       return await this.firebase.auth().verifyIdToken(idToken);
     } catch {
@@ -35,32 +29,16 @@ export class AuthService {
     }
   }
 
-  private async generateTokens(
-    userId: string,
-    role: UserRole,
-    termsAndConditionsAccepted: boolean,
-    userMembership?: UserMembership,
-    companyId?: string,
-    companyMembership?: CompanyMembership,
-    companyRole?: CompanyRole
-  ) {
-    const payload = {
-      sub: userId,
-      role,
-      termsAndConditionsAccepted,
-      userMembership,
-      companyId,
-      companyMembership,
-      companyRole,
-    };
+  async generateTokens(userId: string) {
+    const payload = { sub: userId };
 
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '7d' });
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '5m' });
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '7d', secret: JWT_SECRET });
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '365d', secret: JWT_SECRET });
 
-    const hash = await bcrypt.hash(refreshToken, 10);
+    const hashedRefreshToken = SHA256(refreshToken).toString();
     await this.prisma.user.update({
       where: { id: userId },
-      data: { refreshToken: hash },
+      data: { refreshToken: hashedRefreshToken },
     });
 
     return { accessToken, refreshToken };
@@ -78,33 +56,14 @@ export class AuthService {
     // check user
     const existing = await this.prisma.user.findUnique({
       where: { id: uid },
-      select: {
-        role: true,
-        termsAndConditionsAccepted: true,
-        membership: true,
-        company: true,
-        companyRole: true,
-      },
     });
     if (existing) {
-      const userMembership = UserMembershipSchema.parse(existing.membership);
-      const companyMembership = CompanyMembershipSchema.parse(existing.company);
-
-      const tokens = await this.generateTokens(
-        uid,
-        existing.role,
-        existing.termsAndConditionsAccepted,
-        userMembership,
-        existing.company?.id,
-        companyMembership,
-        existing.companyRole
-      );
+      const { accessToken, refreshToken } = await this.generateTokens(uid);
 
       return {
         id: uid,
-        role: existing.role,
-        termsAndConditionsAccepted: existing.termsAndConditionsAccepted,
-        ...tokens,
+        accessToken,
+        refreshToken,
       };
     }
 
@@ -125,19 +84,38 @@ export class AuthService {
       },
     });
 
-    const tokens = await this.generateTokens(
-      newUser.id,
-      UserRole.USER,
-      false,
-      undefined,
-      undefined,
-      undefined
-    );
+    const companyInvite = await this.prisma.companyInvitation.findUnique({
+      where: {
+        companyId_userEmail: {
+          companyId: newUser.companyId,
+          userEmail: newUser.email,
+        },
+      },
+    });
+
+    if (companyInvite) {
+      const notificationCategory = await this.prisma.notificationCategory.findUnique({
+        where: { name: 'company-invitation' },
+      });
+      await this.prisma.notification.create({
+        data: {
+          title: '회사 초대 알림',
+          content: '회사 초대 알림',
+
+          link: `/company/${companyInvite.companyId}/invitation/${companyInvite.id}`,
+          metadata: { companyInvitationId: companyInvite.id },
+          notificationCategoryId: notificationCategory?.id,
+
+          target: newUser.id,
+        },
+      });
+    }
+
+    const { accessToken, refreshToken } = await this.generateTokens(newUser.id);
     return {
       id: newUser.id,
-      role: UserRole.USER,
-      termsAndConditionsAccepted: false,
-      ...tokens,
+      accessToken,
+      refreshToken,
     };
   }
 
@@ -162,14 +140,7 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: {
-        role: true,
-        refreshToken: true,
-        termsAndConditionsAccepted: true,
-        membership: true,
-        company: true,
-        companyRole: true,
-      },
+      select: { id: true, refreshToken: true },
     });
     if (!user || !user.refreshToken) {
       throw new UnauthorizedException({
@@ -178,7 +149,8 @@ export class AuthService {
       });
     }
 
-    const isMatch = await bcrypt.compare(refreshToken, user.refreshToken);
+    const hashedRefreshToken = SHA256(refreshToken).toString();
+    const isMatch = hashedRefreshToken === user.refreshToken;
     if (!isMatch) {
       throw new UnauthorizedException({
         type: 'UNAUTHORIZED',
@@ -186,18 +158,7 @@ export class AuthService {
       });
     }
 
-    const userMembership = UserMembershipSchema.parse(user.membership);
-    const companyMembership = CompanyMembershipSchema.parse(user.company);
-
-    const tokens = await this.generateTokens(
-      userId,
-      user.role,
-      user.termsAndConditionsAccepted,
-      userMembership,
-      user.company?.id,
-      companyMembership,
-      user.companyRole
-    );
+    const tokens = await this.generateTokens(userId);
     return tokens;
   }
 }

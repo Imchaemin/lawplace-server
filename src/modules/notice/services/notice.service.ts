@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { Notice, NoticeSchema, NoticeSimple } from '@/entities/notice';
+import { Notice, NoticeSchema, NoticeSimple, NoticeSimpleSchema } from '@/entities/notice';
 import { PrismaService } from '@/prisma/services/prisma.service';
 
 @Injectable()
@@ -50,6 +50,7 @@ export class NoticeService {
 
         url: true,
         content: true,
+
         image: true,
 
         noticeCategory: {
@@ -64,7 +65,7 @@ export class NoticeService {
       },
     });
 
-    const res = notices.map(notice => NoticeSchema.parse(notice));
+    const res = notices.map(notice => NoticeSimpleSchema.parse(notice));
     return res;
   }
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   CompanyInvitationStatus as PrismaCompanyInvitationStatus,
   CompanyRole as PrismaCompanyRole,
-} from '@prisma/clients/client';
+} from '@prisma/client';
 
 import { PrismaService } from '@/prisma/services/prisma.service';
 
@@ -30,7 +30,7 @@ export class CompanyInvitationService {
       },
     });
 
-    await this.prisma.companyInvitation.create({
+    const companyInvite = await this.prisma.companyInvitation.create({
       data: {
         userName: inviteeName,
         userEmail: inviteeEmail,
@@ -42,5 +42,29 @@ export class CompanyInvitationService {
         status: PrismaCompanyInvitationStatus.PENDING,
       },
     });
+
+    const invitee = await this.prisma.user.findUnique({
+      where: {
+        email: inviteeEmail,
+      },
+    });
+
+    if (invitee) {
+      const notificationCategory = await this.prisma.notificationCategory.findUnique({
+        where: { name: 'company-invitation' },
+      });
+      await this.prisma.notification.create({
+        data: {
+          title: '회사 초대 알림',
+          content: '회사 초대 알림',
+
+          link: `/company/${user.company.id}/invitation/${companyInvite.id}`,
+          metadata: { companyInvitationId: companyInvite.id },
+          notificationCategoryId: notificationCategory?.id,
+
+          target: invitee.id,
+        },
+      });
+    }
   }
 }

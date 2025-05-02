@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "./clients/client"
 }
 
 datasource db {
@@ -114,6 +113,8 @@ model CompanyInvitation {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([companyId, userEmail])
 }
 
 model UserMembership {
@@ -221,10 +222,10 @@ model MeetingRoom {
   capacity Int     @default(4)
   credit   Decimal @default(0.0) @db.Decimal(10, 2) // reservation interval당 credit
 
-  enablePeakTime  Boolean   @default(false)
-  peakTimeCredit  Decimal   @default(0.0) @db.Decimal(10, 2) // 피크타임 credit
-  peakTimeStartAt DateTime? // utc
-  peakTimeEndAt   DateTime? // utc
+  enablePeakTime  Boolean  @default(false)
+  peakTimeCredit  Decimal? @default(0.0) @db.Decimal(10, 2) // 피크타임 credit
+  peakTimeStartAt String? // hour:minute
+  peakTimeEndAt   String? // hour:minute
 
   reservationInterval Int @default(30) // 최소 예약 시간 (분)
 
@@ -321,7 +322,7 @@ model Notification {
 model NotificationCategory {
   id String @id @default(uuid())
 
-  name          String
+  name          String         @unique
   icon          String?
   notifications Notification[]
 }

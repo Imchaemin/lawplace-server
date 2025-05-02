@@ -1,5 +1,4 @@
-import { CompanyInvitationStatus, MembershipRole } from '@prisma/clients/client';
-import { CompanyRole } from '@prisma/clients/client';
+import { CompanyInvitationStatus, CompanyRole, MembershipRole } from '@prisma/client';
 import { z } from 'zod';
 
 import { CreditSchema } from './credit';

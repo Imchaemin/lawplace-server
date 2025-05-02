@@ -88,6 +88,7 @@ export class MeetingRoomService {
       where: {
         meetingRoomId,
         startAt: { lte: endAt },
+        endAt: { gte: startAt },
       },
     });
     if (currentReservation.length > 0 || invalidDate) {
@@ -146,24 +147,35 @@ export class MeetingRoomService {
     return Math.ceil(diffInMinutes / timeInterval);
   }
 
+  /**
+   * "HH:mm" 문자열을 기준 날짜의 시간으로 변환
+   */
+  private toDateWithTime(baseDate: Date, time: string): Date {
+    const [hours, minutes] = time.split(':').map(Number);
+    const date = new Date(baseDate);
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+  }
+
   calculatePeakTimeslots(
     startAt: Date,
     endAt: Date,
-    peakTimeStartAt: Date,
-    peakTimeEndAt: Date,
-
+    peakTimeStartAt: string, // hour:minute
+    peakTimeEndAt: string, // hour:minute
     reservationInterval: number
   ): number {
-    if (
-      !peakTimeStartAt ||
-      !peakTimeEndAt ||
-      isAfter(startAt, peakTimeEndAt) ||
-      isBefore(endAt, peakTimeStartAt)
-    )
-      return 0;
+    if (!peakTimeStartAt || !peakTimeEndAt) return 0;
 
-    const overlapStart = isAfter(startAt, peakTimeStartAt) ? startAt : peakTimeStartAt;
-    const overlapEnd = isBefore(endAt, peakTimeEndAt) ? endAt : peakTimeEndAt;
+    // 기준 날짜의 peaktime 구간을 Date로 변환
+    const peakStart = this.toDateWithTime(startAt, peakTimeStartAt);
+    const peakEnd = this.toDateWithTime(startAt, peakTimeEndAt);
+
+    // 예약 구간과 피크타임 구간의 겹치는 부분 계산
+    const overlapStart = isAfter(startAt, peakStart) ? startAt : peakStart;
+    const overlapEnd = isBefore(endAt, peakEnd) ? endAt : peakEnd;
+
+    // 겹치는 구간이 없으면 0
+    if (isAfter(overlapStart, overlapEnd)) return 0;
 
     return this.calculateTimeslots(overlapStart, overlapEnd, reservationInterval);
   }

@@ -1,9 +1,4 @@
-import {
-  CompanyRole,
-  CreditTransactionType,
-  MembershipRole,
-  UserRole,
-} from '@prisma/clients/client';
+import { CompanyRole, CreditTransactionType, MembershipRole, UserRole } from '@prisma/client';
 import { nativeEnum, z } from 'zod';
 
 import { CompanySchema } from './company';
@@ -17,15 +12,11 @@ import { TermsAndConditionsSchema } from './terms-conditions';
 export const UserAuthSchema = z
   .object({
     id: z.string(),
-    role: z.nativeEnum(UserRole),
-    termsAndConditionsAccepted: z.boolean(),
     accessToken: z.string(),
     refreshToken: z.string(),
   })
   .transform(data => ({
     id: data.id,
-    role: data.role,
-    termsAndConditionsAccepted: data.termsAndConditionsAccepted,
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
   }));

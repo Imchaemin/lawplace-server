@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CompanyInvitationStatus } from '@prisma/clients/client';
+import { CompanyInvitationStatus } from '@prisma/client';
 import { keyBy } from 'lodash';
 
 import { CompanyEmployee, CompanyEmployeeSchema } from '@/entities/company';

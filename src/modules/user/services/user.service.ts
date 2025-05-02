@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MembershipRole } from '@prisma/clients/client';
+import { MembershipRole } from '@prisma/client';
 
 import { UserSchema } from '@/entities/user';
 import { getRoleLevel, parseRole } from '@/libs/membership';

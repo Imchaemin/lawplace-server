@@ -1,11 +1,11 @@
-import { MembershipRole } from '@prisma/clients/client';
+import { MembershipRole } from '@prisma/client';
 import { z } from 'zod';
 
 export const OfficeSchema = z.object({
   id: z.string(),
 
   name: z.string(),
-  description: z.string(),
+  description: z.string().nullable(),
   address: z.string(),
 });
 export type Office = z.infer<typeof OfficeSchema>;
