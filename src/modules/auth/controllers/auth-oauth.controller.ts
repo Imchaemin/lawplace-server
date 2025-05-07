@@ -1,6 +1,4 @@
-import { BadRequestException, Controller, Get, Query, Res } from '@nestjs/common';
-import { UserRole } from '@prisma/client';
-import { Response } from 'express';
+import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 
 import { PrismaService } from '@/prisma/services/prisma.service';
 
@@ -16,15 +14,8 @@ export class AuthOauthController {
   ) {}
 
   @Get('google/callback')
-  async googleCallback(
-    @Query()
-    query: {
-      code: string; // Google OAuth code
-      state: string; // FE redirect url
-    },
-    @Res() res: Response
-  ) {
-    const { code, state } = query;
+  async googleCallback(@Query() query: { code: string }) {
+    const { code } = query;
     if (!code) {
       throw new BadRequestException({
         type: 'BAD_REQUEST',
@@ -44,29 +35,17 @@ export class AuthOauthController {
       },
     });
 
-    const baseDeepLink = new URL(decodeURIComponent(state));
-    const targetDeepLink =
-      user.role === UserRole.USER && !user.termsAndConditionsAccepted
-        ? `lawplace://terms`
-        : baseDeepLink;
-
-    const redirectUrl = new URL(targetDeepLink);
-    redirectUrl.searchParams.set('accessToken', accessToken);
-    redirectUrl.searchParams.set('refreshToken', refreshToken);
-
-    return res.redirect(redirectUrl.toString());
+    return {
+      userId: userAuth.id,
+      accessToken,
+      refreshToken,
+      termsAndConditionsAccepted: user.termsAndConditionsAccepted,
+    };
   }
 
   @Get('apple/callback')
-  async appleCallback(
-    @Query()
-    query: {
-      code: string; // Apple OAuth code
-      state: string; // FE redirect url
-    },
-    @Res() res: Response
-  ) {
-    const { code, state } = query;
+  async appleCallback(@Query() query: { code: string }) {
+    const { code } = query;
     if (!code) {
       throw new BadRequestException({
         type: 'BAD_REQUEST',
@@ -86,16 +65,11 @@ export class AuthOauthController {
       },
     });
 
-    const baseDeepLink = new URL(decodeURIComponent(state));
-    const targetDeepLink =
-      user.role === UserRole.USER && !user.termsAndConditionsAccepted
-        ? `lawplace://terms`
-        : baseDeepLink;
-
-    const redirectUrl = new URL(targetDeepLink);
-    redirectUrl.searchParams.set('accessToken', accessToken);
-    redirectUrl.searchParams.set('refreshToken', refreshToken);
-
-    return res.redirect(redirectUrl.toString());
+    return {
+      userId: userAuth.id,
+      accessToken,
+      refreshToken,
+      termsAndConditionsAccepted: user.termsAndConditionsAccepted,
+    };
   }
 }

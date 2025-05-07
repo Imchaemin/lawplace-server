@@ -323,7 +323,6 @@ model NotificationCategory {
   id String @id @default(uuid())
 
   name          String         @unique
-  icon          String?
   notifications Notification[]
 }
 

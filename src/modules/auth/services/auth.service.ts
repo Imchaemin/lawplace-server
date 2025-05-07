@@ -64,6 +64,7 @@ export class AuthService {
         id: uid,
         accessToken,
         refreshToken,
+        termsAndConditionsAccepted: existing.termsAndConditionsAccepted,
       };
     }
 
@@ -81,6 +82,7 @@ export class AuthService {
         name,
         phone,
         provider,
+        termsAndConditionsAccepted: false,
       },
     });
 
@@ -116,6 +118,7 @@ export class AuthService {
       id: newUser.id,
       accessToken,
       refreshToken,
+      termsAndConditionsAccepted: newUser.termsAndConditionsAccepted,
     };
   }
 

@@ -14,11 +14,13 @@ export const UserAuthSchema = z
     id: z.string(),
     accessToken: z.string(),
     refreshToken: z.string(),
+    termsAndConditionsAccepted: z.boolean(),
   })
   .transform(data => ({
     id: data.id,
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
+    termsAndConditionsAccepted: data.termsAndConditionsAccepted,
   }));
 export type UserAuth = z.infer<typeof UserAuthSchema>;
 
@@ -35,7 +37,6 @@ export const UserSchema = z
     membership: UserMembershipSchema.nullable(),
     company: CompanySchema.nullable(),
     companyRole: z.nativeEnum(CompanyRole).nullable(),
-    companyEmployeeCount: z.number().nullable(),
     credit: CreditSchema.nullable(),
   })
   .transform(data => ({
@@ -50,7 +51,6 @@ export const UserSchema = z
     membership: data.membership,
     company: data.company,
     companyRole: data.companyRole,
-    companyEmployeeCount: data.companyEmployeeCount,
     credit: data.credit,
   }));
 export type User = z.infer<typeof UserSchema>;

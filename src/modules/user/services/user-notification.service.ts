@@ -61,7 +61,6 @@ export class UserNotificationService {
           select: {
             id: true,
             name: true,
-            icon: true,
           },
         },
         notificationReads: {
@@ -98,6 +97,43 @@ export class UserNotificationService {
       data: res,
       metadata: paginateMetadata,
     };
+  }
+
+  async getUserNewNotifications(userId: string): Promise<boolean> {
+    const sevenDaysAgo = sub(new Date(), { days: 7 });
+    const where = {
+      AND: [
+        {
+          createdAt: { gte: sevenDaysAgo },
+        },
+        {
+          OR: [
+            { target: null }, // target이 null인 경우 (모든 사용자용)
+            { target: userId }, // target이 특정 userId와 일치하는 경우
+          ],
+        },
+      ],
+    };
+    const notifications = await this.prisma.notification.findMany({
+      where,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        id: true,
+        notificationReads: {
+          where: { userId },
+          select: {
+            read: true,
+          },
+        },
+      },
+    });
+    const unReadNotifications = notifications.filter(
+      notification => !notification.notificationReads?.[0]?.read
+    );
+
+    return unReadNotifications.length > 0;
   }
 
   async readNotification(id: string, userId: string): Promise<void> {

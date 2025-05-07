@@ -170,6 +170,7 @@ export class AdminAuthService {
       id: createdUser.id,
       accessToken,
       refreshToken,
+      termsAndConditionsAccepted: createdUser.termsAndConditionsAccepted,
     };
   }
 
@@ -178,6 +179,7 @@ export class AdminAuthService {
       where: { email },
       select: {
         id: true,
+        termsAndConditionsAccepted: true,
       },
     });
     if (!user) {
@@ -193,6 +195,7 @@ export class AdminAuthService {
       id: user.id,
       accessToken,
       refreshToken,
+      termsAndConditionsAccepted: user.termsAndConditionsAccepted,
     };
   }
 }

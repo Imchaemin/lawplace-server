@@ -8,6 +8,7 @@ export const CompanySchema = z.object({
   id: z.string(),
 
   name: z.string(),
+  employeeCount: z.number(),
   credit: CreditSchema.nullable(),
   membership: CompanyMembershipSchema.nullable(),
 });

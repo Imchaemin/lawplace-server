@@ -87,11 +87,15 @@ export class UserService {
       getRoleLevel(companyMembershipRole)
     );
     const currentMembership = parseRole(membershipLevel);
+    const company = {
+      ...user.company,
+      employeeCount: companyEmployeeCount,
+    };
 
     const data = UserSchema.parse({
       ...user,
       currentMembership,
-      companyEmployeeCount,
+      company,
     });
     return data;
   }

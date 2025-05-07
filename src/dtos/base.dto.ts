@@ -4,18 +4,17 @@ import { Request } from 'express';
 import { z } from 'zod';
 
 export const PaginateSchema = extendApi(
-  z
-    .string()
-    .regex(/^.+:\d+(:\d+)?$/, 'Format must be cursor:take:skip(skip is optional)')
-    .transform(val => {
-      const [_cursor, take, skip] = val.split(':');
-      const cursor = _cursor && _cursor !== 'undefined' ? _cursor : undefined;
-      return {
-        cursor,
-        take: Number(take),
-        skip: skip ? Number(skip) : cursor ? 1 : undefined,
-      };
-    }),
+  z.string().transform(val => {
+    const [_cursor, _take, _skip] = val.split(':');
+    const cursor = _cursor && _cursor !== 'undefined' ? _cursor : undefined;
+    const take = _take && _take !== 'undefined' ? _take : undefined;
+    const skip = _skip && _skip !== 'undefined' ? _skip : undefined;
+    return {
+      cursor,
+      take: take ? Number(take) : undefined,
+      skip: skip ? Number(skip) : cursor ? 1 : undefined,
+    };
+  }),
   {
     description: '페이지네이션 쿼리. cursor:take:skip 형식',
     examples: [

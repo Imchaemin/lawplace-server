@@ -1,7 +1,6 @@
 import { ZodValidationPipe } from '@anatine/zod-nestjs';
-import { Body, Controller, Post, Query, Res, UseInterceptors, UsePipes } from '@nestjs/common';
+import { Body, Controller, Post, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
 
 import { PrivateCorsInterceptor } from '@/interceptors/cors.interceptor';
 
@@ -16,43 +15,28 @@ export class AdminAuthController {
   constructor(private readonly adminAuthService: AdminAuthService) {}
 
   @Post('signup')
-  async signup(
-    @Query() query: { state: string },
-    @Body() body: SigninReqBodyDto,
-    @Res() res: Response
-  ) {
-    const { state } = query;
-
+  async signup(@Body() body: SigninReqBodyDto) {
     const userAuth = await this.adminAuthService.signupAdmin(body);
     const { accessToken, refreshToken } = userAuth;
 
-    const baseDeepLink = new URL(decodeURIComponent(state));
-    const targetDeepLink = baseDeepLink;
-
-    const redirectUrl = new URL(targetDeepLink);
-    redirectUrl.searchParams.set('accessToken', accessToken);
-    redirectUrl.searchParams.set('refreshToken', refreshToken);
-
-    return res.redirect(redirectUrl.toString());
+    return {
+      userId: userAuth.id,
+      accessToken,
+      refreshToken,
+      termsAndConditionsAccepted: userAuth.termsAndConditionsAccepted,
+    };
   }
 
   @Post('signin')
-  async signin(
-    @Query() query: { state: string },
-    @Body() body: { email: string },
-    @Res() res: Response
-  ) {
-    const { state } = query;
-
+  async signin(@Body() body: { email: string }) {
     const userAuth = await this.adminAuthService.signinWithPreset(body.email);
     const { accessToken, refreshToken } = userAuth;
 
-    const baseDeepLink = new URL(decodeURIComponent(state));
-
-    const redirectUrl = new URL(baseDeepLink);
-    redirectUrl.searchParams.set('accessToken', accessToken);
-    redirectUrl.searchParams.set('refreshToken', refreshToken);
-
-    return res.redirect(redirectUrl.toString());
+    return {
+      userId: userAuth.id,
+      accessToken,
+      refreshToken,
+      termsAndConditionsAccepted: userAuth.termsAndConditionsAccepted,
+    };
   }
 }

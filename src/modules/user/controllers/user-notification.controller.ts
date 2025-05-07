@@ -36,6 +36,12 @@ export class UserNotificationController {
     return this.userNotificationService.getUserNotifications(req.auth.sub, query);
   }
 
+  @Get('/new')
+  @UseGuards(AuthGuard)
+  async getUserNewNotifications(@Req() req: RequestWithAuth): Promise<boolean> {
+    return this.userNotificationService.getUserNewNotifications(req.auth.sub);
+  }
+
   @Patch('/read')
   @UseGuards(AuthGuard)
   async readNotification(
