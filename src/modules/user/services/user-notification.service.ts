@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { sub } from 'date-fns';
 
 import { BaseReqQueryDto, PaginateMetadataSchema } from '@/dtos/base.dto';
-import { UserNotificationSchema } from '@/entities/user';
+import { UserNotification, UserNotificationSchema } from '@/entities/user';
 import { PrismaService } from '@/prisma/services/prisma.service';
 
 import { GetUserNotificationsResDto } from '../dtos/user-notification.dto';
@@ -10,6 +10,42 @@ import { GetUserNotificationsResDto } from '../dtos/user-notification.dto';
 @Injectable()
 export class UserNotificationService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async getUserNotification(userId: string, id: string): Promise<UserNotification> {
+    const notification = await this.prisma.notification.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        link: true,
+        metadata: true,
+        target: true,
+
+        createdAt: true,
+
+        notificationCategory: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        notificationReads: {
+          where: { userId },
+          select: {
+            id: true,
+            read: true,
+          },
+        },
+      },
+    });
+
+    if (!notification) throw new NotFoundException('Notification not found');
+    return UserNotificationSchema.parse({
+      ...notification,
+      read: notification.notificationReads?.[0]?.read || false,
+    });
+  }
 
   async getUserNotifications(
     userId: string,

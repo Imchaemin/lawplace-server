@@ -4,7 +4,10 @@ import { PrismaModule } from '@/prisma/prisma.module';
 
 import { UserController } from './controllers/user.controller';
 import { UserMeetingRoomController } from './controllers/user-meeting-room.controller';
-import { UserNotificationController } from './controllers/user-notification.controller';
+import {
+  UserNotificationController,
+  UserNotificationsController,
+} from './controllers/user-notification.controller';
 import { UserTermsConditionsController } from './controllers/user-terms-conditions.controller.ts';
 import { UserService } from './services/user.service';
 import { UserMeetingRoomService } from './services/user-meeting-room.service';
@@ -16,6 +19,7 @@ import { UserTermsConditionsService } from './services/user-terms-conditions.ser
   controllers: [
     UserController,
     UserNotificationController,
+    UserNotificationsController,
     UserMeetingRoomController,
     UserTermsConditionsController,
   ],

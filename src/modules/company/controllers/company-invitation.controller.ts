@@ -1,5 +1,15 @@
 import { ZodValidationPipe } from '@anatine/zod-nestjs';
-import { Body, Controller, Post, Req, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+  UseInterceptors,
+  UsePipes,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   CompanyRole as PrismaCompanyRole,
@@ -21,6 +31,12 @@ import { CompanyInvitationService } from '../services/company-invitation.service
 export class CompanyInvitationController {
   constructor(private readonly companyInvitationService: CompanyInvitationService) {}
 
+  @Get(':companyId/invitation')
+  @UseGuards(AuthGuard)
+  async getInvitation(@Req() req: RequestWithAuth, @Param() param: { companyId: string }) {
+    return this.companyInvitationService.getInvitation(param.companyId, req.auth.sub);
+  }
+
   @Post(':companyId/invite')
   @UseGuards(AuthGuard)
   @MembershipRole(PrismaMembershipRole.USER_LV1)
@@ -30,5 +46,19 @@ export class CompanyInvitationController {
     @Body() body: { inviteeName: string; inviteeEmail: string }
   ) {
     return this.companyInvitationService.invite(req.auth.sub, body.inviteeName, body.inviteeEmail);
+  }
+
+  @Post(':companyId/accept')
+  @UseGuards(AuthGuard)
+  async accept(
+    @Req() req: RequestWithAuth,
+    @Param() param: { companyId: string },
+    @Body() body: { acceptance: boolean }
+  ) {
+    return this.companyInvitationService.acceptInvitation(
+      req.auth.sub,
+      param.companyId,
+      body.acceptance
+    );
   }
 }
