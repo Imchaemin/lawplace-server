@@ -12,3 +12,8 @@ export const ReserveMeetingRoomBodySchema = z
     message: 'startAt must be in the future',
   });
 export class ReserveMeetingRoomBodyDto extends createZodDto(ReserveMeetingRoomBodySchema) {}
+
+export const GetMeetingRoomsQuerySchema = z.object({
+  date: z.preprocess(val => new Date(val as string), z.date()).optional(),
+});
+export class GetMeetingRoomsQueryDto extends createZodDto(GetMeetingRoomsQuerySchema) {}

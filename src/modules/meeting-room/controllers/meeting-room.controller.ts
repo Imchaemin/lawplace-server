@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Post,
+  Query,
   Req,
   UseGuards,
   UseInterceptors,
@@ -17,7 +18,7 @@ import { AuthGuard } from '@/guards/auth.guard';
 import { MembershipRole } from '@/guards/membership-role.guard';
 import { PrivateCorsInterceptor } from '@/interceptors/cors.interceptor';
 
-import { ReserveMeetingRoomBodyDto } from '../dtos/meeting-room.dto';
+import { GetMeetingRoomsQueryDto, ReserveMeetingRoomBodyDto } from '../dtos/meeting-room.dto';
 import { MeetingRoomService } from '../services/meeting-room.service';
 
 @ApiTags('MEETING_ROOM')
@@ -48,7 +49,7 @@ export class MeetingRoomsController {
   constructor(private readonly meetingRoomService: MeetingRoomService) {}
 
   @Get('')
-  async getMeetingRooms() {
-    return this.meetingRoomService.getMeetingRooms();
+  async getMeetingRooms(@Query() query: GetMeetingRoomsQueryDto) {
+    return this.meetingRoomService.getMeetingRooms(query);
   }
 }

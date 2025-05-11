@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { subMinutes } from 'date-fns';
+import { isAfter } from 'date-fns';
 
 import { BaseReqQueryDto, PaginateMetadataSchema } from '@/dtos/base.dto';
 import { UserMeetingRoomReservationSchema } from '@/entities/user';
@@ -83,5 +85,20 @@ export class UserMeetingRoomService {
       data: res,
       metadata: paginateMetadata,
     };
+  }
+
+  async cancel(userId: string, reservationId: string) {
+    const reservation = await this.prisma.meetingRoomReservation.findUnique({
+      where: { id: reservationId, userId },
+    });
+    if (!reservation) throw new NotFoundException('Not found reservation');
+
+    const now = new Date();
+    const before10Minutes = isAfter(now, subMinutes(reservation.startAt, 10));
+    if (before10Minutes) throw new BadRequestException('Reservation is before now');
+
+    await this.prisma.meetingRoomReservation.delete({
+      where: { id: reservationId },
+    });
   }
 }

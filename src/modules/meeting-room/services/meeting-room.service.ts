@@ -1,14 +1,23 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { differenceInMinutes, isAfter, isBefore } from 'date-fns';
+import { add, differenceInMinutes, isAfter, isBefore, set } from 'date-fns';
 
 import { MeetingRoom, MeetingRoomSchema } from '@/entities/meeting-room';
 import { PrismaService } from '@/prisma/services/prisma.service';
+
+import { GetMeetingRoomsQueryDto } from '../dtos/meeting-room.dto';
 
 @Injectable()
 export class MeetingRoomService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getMeetingRooms(): Promise<MeetingRoom[]> {
+  async getMeetingRooms(query: GetMeetingRoomsQueryDto): Promise<MeetingRoom[]> {
+    const targetDate = set(query.date || new Date(), {
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      milliseconds: 0,
+    });
+
     const meetingRooms = await this.prisma.meetingRoom.findMany({
       where: {
         active: true,
@@ -37,6 +46,10 @@ export class MeetingRoomService {
 
         reservationInterval: true,
         meetingRoomReservations: {
+          where: {
+            startAt: { gte: targetDate },
+            endAt: { lt: add(targetDate, { days: 1 }) },
+          },
           select: {
             id: true,
 
@@ -87,8 +100,8 @@ export class MeetingRoomService {
     const currentReservation = await this.prisma.meetingRoomReservation.findMany({
       where: {
         meetingRoomId,
-        startAt: { lte: endAt },
-        endAt: { gte: startAt },
+        startAt: { lt: endAt },
+        endAt: { gt: startAt },
       },
     });
     if (currentReservation.length > 0 || invalidDate) {
@@ -150,7 +163,7 @@ export class MeetingRoomService {
   /**
    * "HH:mm" 문자열을 기준 날짜의 시간으로 변환
    */
-  private toDateWithTime(baseDate: Date, time: string): Date {
+  toDateWithTime(baseDate: Date, time: string): Date {
     const [hours, minutes] = time.split(':').map(Number);
     const date = new Date(baseDate);
     date.setHours(hours, minutes, 0, 0);

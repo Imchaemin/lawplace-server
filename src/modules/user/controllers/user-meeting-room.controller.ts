@@ -1,5 +1,15 @@
 import { ZodValidationPipe } from '@anatine/zod-nestjs';
-import { Controller, Get, Query, Req, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Query,
+  Req,
+  UseGuards,
+  UseInterceptors,
+  UsePipes,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { RequestWithAuth } from '@/dtos/auth.dto';
@@ -24,5 +34,11 @@ export class UserMeetingRoomController {
     @Query() query: BaseReqQueryDto
   ): Promise<GetUserMeetingRoomReservationsResDto> {
     return this.userMeetingRoomService.getUserMeetingRoomReservations(req.auth.sub, query);
+  }
+
+  @Delete('reservations/:reservationId')
+  @UseGuards(AuthGuard)
+  async cancelReservation(@Req() req: RequestWithAuth, @Param() param: { reservationId: string }) {
+    return this.userMeetingRoomService.cancel(req.auth.sub, param.reservationId);
   }
 }
