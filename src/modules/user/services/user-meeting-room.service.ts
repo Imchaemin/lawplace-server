@@ -100,5 +100,17 @@ export class UserMeetingRoomService {
     await this.prisma.meetingRoomReservation.delete({
       where: { id: reservationId },
     });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        credit: true,
+      },
+    });
+
+    await this.prisma.credit.update({
+      where: { id: user.credit.id },
+      data: { currentCredit: { increment: reservation.totalCredit } },
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { MembershipRole } from '@prisma/client';
 
 import { UserSchema } from '@/entities/user';
@@ -78,19 +78,23 @@ export class UserService {
         },
       },
     });
-    const userMembershipRole = user.membership?.role || MembershipRole.USER_LV0;
-    const companyMembershipRole = user.company?.membership?.role || MembershipRole.USER_LV0;
-    const companyEmployeeCount = user.company?._count.employees || 0;
+    if (!user) throw new NotFoundException('User not found');
+
+    const userMembershipRole = user?.membership?.role || MembershipRole.USER_LV0;
+    const companyMembershipRole = user?.company?.membership?.role || MembershipRole.USER_LV0;
+    const companyEmployeeCount = user?.company?._count.employees || 0;
 
     const membershipLevel = Math.max(
       getRoleLevel(userMembershipRole),
       getRoleLevel(companyMembershipRole)
     );
     const currentMembership = parseRole(membershipLevel);
-    const company = {
-      ...user.company,
-      employeeCount: companyEmployeeCount,
-    };
+    const company = user?.company
+      ? {
+          ...user.company,
+          employeeCount: companyEmployeeCount,
+        }
+      : null;
 
     const data = UserSchema.parse({
       ...user,

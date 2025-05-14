@@ -151,6 +151,18 @@ export class MeetingRoomService {
         totalCredit,
       },
     });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        credit: true,
+      },
+    });
+
+    await this.prisma.credit.update({
+      where: { id: user.credit.id },
+      data: { currentCredit: { decrement: totalCredit } },
+    });
   }
 
   calculateTimeslots(startAt: Date, endAt: Date, timeInterval: number): number {
