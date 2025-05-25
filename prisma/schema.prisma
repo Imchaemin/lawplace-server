@@ -372,3 +372,13 @@ model TermsAndConditionsAcceptance {
 
   @@unique([userId, termsAndConditionsId])
 }
+
+model AppConfig {
+  id String @id @default(uuid())
+
+  latestVersion       String
+  minSupportedVersion String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}

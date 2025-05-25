@@ -9,6 +9,7 @@ import { CompanyModule } from './modules/company/company.module';
 import { CreditModule } from './modules/credit/credit.module';
 import { FirebaseModule } from './modules/firebase/firebase.module';
 import { MeetingRoomModule } from './modules/meeting-room/meeting-room.module';
+import { MetadataModule } from './modules/metadata/metadata.module';
 import { NoticeModule } from './modules/notice/notice.module';
 import { UserModule } from './modules/user/user.module';
 @Module({
@@ -17,6 +18,7 @@ import { UserModule } from './modules/user/user.module';
     ScheduleModule.forRoot(),
     JwtModule.register({ secret: JWT_SECRET }),
 
+    MetadataModule,
     AuthModule,
     CompanyModule,
     CreditModule,

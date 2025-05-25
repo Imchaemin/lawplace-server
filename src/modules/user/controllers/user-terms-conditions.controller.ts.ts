@@ -14,7 +14,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { RequestWithAuth } from '@/dtos/auth.dto';
 import { UserTermsAndConditionsAcceptance } from '@/entities/user';
 import { AuthGuard } from '@/guards/auth.guard';
-import { TermsGuard } from '@/guards/term.guard';
 import { PrivateCorsInterceptor } from '@/interceptors/cors.interceptor';
 
 import { UserTermsConditionsService } from '../services/user-terms-conditions.service';
@@ -27,7 +26,7 @@ export class UserTermsConditionsController {
   constructor(private readonly userTermsConditionsService: UserTermsConditionsService) {}
 
   @Get('')
-  @UseGuards(AuthGuard, TermsGuard)
+  @UseGuards(AuthGuard)
   async getUserTermsAndConditionsAcceptance(
     @Req() req: RequestWithAuth
   ): Promise<UserTermsAndConditionsAcceptance[]> {
@@ -38,12 +37,12 @@ export class UserTermsConditionsController {
   @UseGuards(AuthGuard)
   async acceptTermsAndConditions(
     @Req() req: RequestWithAuth,
-    @Body() body: { termsAndConditionsId: string; accepted: boolean }
+    @Body() body: { termsAndConditionsId: string; acceptance: boolean }
   ): Promise<void> {
     return this.userTermsConditionsService.acceptTermsAndConditions(
       req.auth.sub,
       body.termsAndConditionsId,
-      body.accepted
+      body.acceptance
     );
   }
 
