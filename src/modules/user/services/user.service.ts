@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { MembershipRole } from '@prisma/client';
+import { CompanyInvitationStatus, MembershipRole } from '@prisma/client';
 
 import { UserSchema } from '@/entities/user';
 import { getRoleLevel, parseRole } from '@/libs/membership';
@@ -80,9 +80,17 @@ export class UserService {
     });
     if (!user) throw new NotFoundException('User not found');
 
+    const pendingCompanyInvitations = await this.prisma.companyInvitation.findMany({
+      where: {
+        companyId: user.company.id,
+        status: CompanyInvitationStatus.PENDING,
+      },
+    });
+
     const userMembershipRole = user?.membership?.role || MembershipRole.USER_LV0;
     const companyMembershipRole = user?.company?.membership?.role || MembershipRole.USER_LV0;
     const companyEmployeeCount = user?.company?._count.employees || 0;
+    const companyPendingInvitationCount = pendingCompanyInvitations?.length || 0;
 
     const membershipLevel = Math.max(
       getRoleLevel(userMembershipRole),
@@ -92,7 +100,7 @@ export class UserService {
     const company = user?.company
       ? {
           ...user.company,
-          employeeCount: companyEmployeeCount,
+          employeeCount: companyEmployeeCount + companyPendingInvitationCount,
         }
       : null;
 

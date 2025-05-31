@@ -58,13 +58,14 @@ export type User = z.infer<typeof UserSchema>;
 export const UserCreditTransactionSchema = z.object({
   id: z.string(),
 
-  credit: CreditSchema,
-
   name: z.string(),
   description: z.string().nullable(),
 
   amount: DecimalSchema,
   type: z.nativeEnum(CreditTransactionType),
+
+  sign: z.number(),
+  createdAt: z.date(),
 });
 export type UserCreditTransaction = z.infer<typeof UserCreditTransactionSchema>;
 

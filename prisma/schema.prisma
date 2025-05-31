@@ -32,8 +32,13 @@ enum CompanyInvitationStatus {
 
 enum CreditTransactionType {
   CHARGE // 충전
-  SPEND // 사용
   REFUND // 환불
+
+  SPEND_NORMAL // 일반 사용
+  REFUND_NORMAL // 일반 환불
+
+  SPEND_MEETING_ROOM // 미팅룸 사용
+  REFUND_MEETING_ROOM // 미팅룸 환불
 }
 
 enum TermsAndConditionsType {
@@ -202,6 +207,7 @@ model CreditTransaction {
 
   type   CreditTransactionType
   amount Decimal               @db.Decimal(10, 2)
+  sign   Int                   @default(1) // 1: 환불/충전, -1: 사용
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

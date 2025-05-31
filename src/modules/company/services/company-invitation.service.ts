@@ -33,8 +33,15 @@ export class CompanyInvitationService {
       },
     });
 
-    const companyInvite = await this.prisma.companyInvitation.create({
-      data: {
+    const companyInvite = await this.prisma.companyInvitation.upsert({
+      where: {
+        companyId_userEmail: {
+          companyId: user.company.id,
+          userEmail: inviteeEmail,
+        },
+      },
+      update: {},
+      create: {
         userName: inviteeName,
         userEmail: inviteeEmail,
 
@@ -77,6 +84,8 @@ export class CompanyInvitationService {
         },
       });
     }
+
+    // TODO: 초대 메일 발송
   }
 
   async getInvitation(companyId: string, userId: string): Promise<CompanyInvitation> {

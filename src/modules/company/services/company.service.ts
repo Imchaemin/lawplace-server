@@ -25,6 +25,7 @@ export class CompanyService {
         name: true,
         email: true,
       },
+      orderBy: [{ createdAt: 'asc' }, { name: 'asc' }],
     });
 
     const companyInvitations = await this.prisma.companyInvitation.findMany({
@@ -42,7 +43,7 @@ export class CompanyService {
 
     const companyInvitationsMap = keyBy(companyInvitations, 'userEmail');
 
-    const res = employees.map(employee =>
+    const parsedEmployees = employees.map(employee =>
       CompanyEmployeeSchema.parse({
         id: employee.id,
         name: employee.name,
@@ -50,8 +51,16 @@ export class CompanyService {
         status: companyInvitationsMap?.[employee.email]?.status || CompanyInvitationStatus.ACCEPTED,
       })
     );
+    const parsedPendingEmployees = companyInvitations.map(employee =>
+      CompanyEmployeeSchema.parse({
+        id: employee.id,
+        name: employee.userName,
+        email: employee.userEmail,
+        status: employee.status,
+      })
+    );
 
-    return res;
+    return [...parsedEmployees, ...parsedPendingEmployees];
   }
 
   async deleteEmployee(companyId: string, employeeId: string): Promise<void> {

@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { CreditTransactionType } from '@prisma/client';
 import { add, differenceInMinutes, isAfter, isBefore, set } from 'date-fns';
 
 import { MeetingRoom, MeetingRoomSchema } from '@/entities/meeting-room';
@@ -162,6 +163,15 @@ export class MeetingRoomService {
     await this.prisma.credit.update({
       where: { id: user.credit.id },
       data: { currentCredit: { decrement: totalCredit } },
+    });
+    await this.prisma.creditTransaction.create({
+      data: {
+        creditId: user.credit.id,
+        name: '회의실 예약',
+        userId,
+        type: CreditTransactionType.SPEND_MEETING_ROOM,
+        amount: totalCredit,
+      },
     });
   }
 
