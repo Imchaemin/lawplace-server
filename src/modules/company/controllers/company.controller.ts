@@ -1,9 +1,11 @@
 import { ZodValidationPipe } from '@anatine/zod-nestjs';
 import {
+  Body,
   Controller,
   Delete,
   Get,
   Param,
+  Post,
   Req,
   UseGuards,
   UseInterceptors,
@@ -36,7 +38,25 @@ export class CompanyController {
   @Delete(':companyId/employees/:employeeId')
   @UseGuards(AuthGuard)
   @CompanyRole(PrismaCompanyRole.COMPANY_ADMIN)
-  async deleteEmployee(@Req() req: RequestWithAuth, @Param() params: { employeeId: string }) {
-    return this.companyService.deleteEmployee(req.auth.companyId, params.employeeId);
+  async deleteEmployee(
+    @Req() req: RequestWithAuth,
+    @Param() params: { companyId: string; employeeId: string }
+  ) {
+    return this.companyService.deleteEmployee(params.companyId, params.employeeId);
+  }
+
+  @Post(':companyId/employees/delete-batch')
+  @UseGuards(AuthGuard)
+  @CompanyRole(PrismaCompanyRole.COMPANY_ADMIN)
+  async deleteEmployeeBatch(
+    @Req() req: RequestWithAuth,
+    @Param() params: { companyId: string },
+    @Body() body: { employeeIds: string[] }
+  ) {
+    return this.companyService.deleteEmployeeBatch(
+      req.auth.sub,
+      params.companyId,
+      body.employeeIds
+    );
   }
 }

@@ -37,5 +37,6 @@ export const CompanyEmployeeSchema = z.object({
   email: z.string(),
 
   status: z.nativeEnum(CompanyInvitationStatus),
+  companyRole: z.nativeEnum(CompanyRole),
 });
 export type CompanyEmployee = z.infer<typeof CompanyEmployeeSchema>;

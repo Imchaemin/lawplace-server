@@ -24,6 +24,7 @@ export class CompanyService {
         id: true,
         name: true,
         email: true,
+        companyRole: true,
       },
       orderBy: [{ createdAt: 'asc' }, { name: 'asc' }],
     });
@@ -38,6 +39,7 @@ export class CompanyService {
         userName: true,
         userEmail: true,
         status: true,
+        companyRole: true,
       },
     });
 
@@ -49,6 +51,7 @@ export class CompanyService {
         name: employee.name,
         email: employee.email,
         status: companyInvitationsMap?.[employee.email]?.status || CompanyInvitationStatus.ACCEPTED,
+        companyRole: employee.companyRole,
       })
     );
     const parsedPendingEmployees = companyInvitations.map(employee =>
@@ -57,6 +60,7 @@ export class CompanyService {
         name: employee.userName,
         email: employee.userEmail,
         status: employee.status,
+        companyRole: employee.companyRole,
       })
     );
 
@@ -78,6 +82,40 @@ export class CompanyService {
       data: {
         companyId: null,
         companyRole: null,
+      },
+    });
+    await this.prisma.companyInvitation.delete({
+      where: {
+        companyId_userEmail: {
+          companyId,
+          userEmail: employeeId,
+        },
+      },
+    });
+  }
+
+  async deleteEmployeeBatch(
+    userId: string,
+    companyId: string,
+    employeeIds: string[]
+  ): Promise<void> {
+    if (!companyId || !employeeIds)
+      throw new BadRequestException('company id and employee ids are required');
+
+    await this.prisma.user.updateMany({
+      where: {
+        id: { in: employeeIds },
+        companyId,
+      },
+      data: {
+        companyId: null,
+        companyRole: null,
+      },
+    });
+    await this.prisma.companyInvitation.deleteMany({
+      where: {
+        companyId,
+        userEmail: { in: employeeIds },
       },
     });
   }
