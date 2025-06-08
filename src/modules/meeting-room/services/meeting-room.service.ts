@@ -171,6 +171,7 @@ export class MeetingRoomService {
         userId,
         type: CreditTransactionType.SPEND_MEETING_ROOM,
         amount: totalCredit,
+        sign: -1,
       },
     });
   }

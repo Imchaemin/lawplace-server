@@ -1,0 +1,70 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    style.
+      body {
+        font-family: sans-serif;
+        background-color: #f9f9fb;
+        color: #1a1a1a;
+        padding: 20px;
+        text-align: center;
+      }
+      .card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.05);
+        padding: 24px;
+        max-width: 400px;
+        margin: 20px auto;
+        text-align: left;
+        position: relative;
+      }
+      .button {
+        display: inline-block;
+        margin-top: 32px;
+        padding: 14px 32px;
+        background-color: #650015;
+        color: white;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: bold;
+      }
+      .reject {
+        display: inline-block;
+        margin-top: 16px;
+        color: #7e8494;
+        font-size: 14px;
+        text-decoration: underline;
+      }
+      .logo {
+        width: 120px;
+        height: auto;
+        margin-left: auto;
+        position: absolute;
+        bottom: 6px;
+        right: 0px;
+      }
+  body
+    img(src="https://storage.googleapis.com/lawplace-assets/email-illust-invite.png" alt="초대 이미지" style="max-width: 120px; margin: 0 auto; display: block;")
+    h2 #{companyName}에서
+    h3 로플레이스 멤버십에 초대했어요.
+
+    .card
+      table
+        tr
+          td(style="font-weight: bold; width: 60px;") 회사
+          td #{companyName}
+        tr
+          td(style="font-weight: bold; width: 60px;") 이메일
+          td #{email}
+        tr
+          td(style="font-weight: bold; width: 60px;") 멤버십
+          td #{membershipName}
+        tr
+          td(style="font-weight: bold; width: 60px;") 기간
+          td #{startDate} ~ #{endDate}
+      img.logo(src="https://storage.googleapis.com/lawplace-assets/email-symbol.png" alt="회사 로고")
+
+    a.button(style="width: 320px" href=acceptUrl) 수락하기

@@ -20,7 +20,7 @@ export const CompanyInvitationSchema = z.object({
 
   userName: z.string(),
   userEmail: z.string(),
-  userPhone: z.string().nullable(),
+  userPhone: z.string().nullable().optional(),
 
   membershipRole: z.nativeEnum(MembershipRole),
   companyRole: z.nativeEnum(CompanyRole),

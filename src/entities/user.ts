@@ -30,7 +30,7 @@ export const UserSchema = z
     role: z.nativeEnum(UserRole),
     email: z.string(),
     name: z.string(),
-    phone: z.string(),
+    phone: z.string().nullable().optional(),
     provider: z.string(),
     termsAndConditionsAccepted: z.boolean(),
     currentMembership: nativeEnum(MembershipRole),

@@ -1,10 +1,7 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import * as jwt from 'jsonwebtoken';
+import { Injectable } from '@nestjs/common';
 
-import { APPLE_CLIENT_ID, BE_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '@/constants';
-
-interface OAuthTokenResponse {
+export interface OAuthTokenResponse {
   access_token: string;
   id_token: string;
   refresh_token?: string;
@@ -13,72 +10,38 @@ interface OAuthTokenResponse {
   token_type?: string;
 }
 
+export interface UserInfo {
+  id: string;
+  email: string;
+  name: string;
+  provider: 'google' | 'apple';
+}
+
+export interface GoogleTokens {
+  accessToken: string;
+  refreshToken?: string;
+  idToken: string;
+  code?: string;
+}
+
 @Injectable()
 export class AuthOauthService {
   constructor(private readonly httpService: HttpService) {}
 
-  async exchangeGoogleCode(code: string): Promise<OAuthTokenResponse> {
+  async getGoogleUserInfo(accessToken: string): Promise<UserInfo> {
     try {
-      const { data } = await this.httpService.axiosRef.post<OAuthTokenResponse>(
-        'https://oauth2.googleapis.com/token',
-        {
-          code,
-          client_id: GOOGLE_CLIENT_ID,
-          client_secret: GOOGLE_CLIENT_SECRET,
-          redirect_uri: `${BE_URL}/auth/google/callback`,
-          grant_type: 'authorization_code',
-        }
+      const { data } = await this.httpService.axiosRef.get<UserInfo>(
+        'https://www.googleapis.com/oauth2/v2/userinfo',
+        { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      return data;
-    } catch (err: any) {
-      throw new InternalServerErrorException({
-        type: 'INTERNAL_SERVER_ERROR',
-        message: `Google token exchange failed: ${err.response?.data || err.message}`,
-      });
+      return {
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        provider: 'google',
+      };
+    } catch (error) {
+      throw new Error(`Google userinfo API failed: ${error.response?.data || error.message}`);
     }
-  }
-
-  async exchangeAppleCode(code: string): Promise<OAuthTokenResponse> {
-    try {
-      const params = new URLSearchParams();
-      params.append('code', code);
-      params.append('client_id', APPLE_CLIENT_ID);
-      params.append('client_secret', this.generateAppleClientSecret());
-      params.append('redirect_uri', `${BE_URL}/auth/apple/callback`);
-      params.append('grant_type', 'authorization_code');
-
-      const { data } = await this.httpService.axiosRef.post<OAuthTokenResponse>(
-        'https://appleid.apple.com/auth/token',
-        params.toString(),
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-      );
-      return data;
-    } catch (err: any) {
-      throw new InternalServerErrorException({
-        type: 'INTERNAL_SERVER_ERROR',
-        message: `Apple token exchange failed: ${err.response?.data || err.message}`,
-      });
-    }
-  }
-
-  private generateAppleClientSecret(): string {
-    const privateKey = process.env.APPLE_PRIVATE_KEY.replace(/\\n/g, '\n');
-    const teamId = process.env.APPLE_TEAM_ID;
-    const keyId = process.env.APPLE_KEY_ID;
-    const clientId = process.env.APPLE_CLIENT_ID;
-    const now = Math.floor(Date.now() / 1000);
-
-    const payload = {
-      iss: teamId,
-      iat: now,
-      exp: now + 15777000, // 약 6개월
-      aud: 'https://appleid.apple.com',
-      sub: clientId,
-    };
-
-    return jwt.sign(payload, privateKey, {
-      algorithm: 'ES256',
-      header: { alg: 'ES256', kid: keyId },
-    });
   }
 }

@@ -1,7 +1,7 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { SHA256 } from 'crypto-js';
-import * as admin from 'firebase-admin';
+import { decode } from 'jsonwebtoken';
 
 import { JWT_SECRET } from '@/constants';
 import { JwtPayload } from '@/dtos/auth.dto';
@@ -9,24 +9,159 @@ import { UserAuth } from '@/entities/user';
 import { PrismaService } from '@/prisma/services/prisma.service';
 
 import { GeneratedTokensDto } from '../dtos/auth.dto';
+import { AuthOauthService, UserInfo } from './auth-oauth.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService,
-    @Inject('firebase') private readonly firebase: admin.app.App
+    private readonly authOauthService: AuthOauthService,
+    private readonly jwtService: JwtService
   ) {}
 
-  async verifyIdToken(idToken: string) {
-    try {
-      return await this.firebase.auth().verifyIdToken(idToken);
-    } catch {
-      throw new UnauthorizedException({
-        type: 'UNAUTHORIZED',
-        message: 'invalid firebase id token',
+  async signinup(userInfo: UserInfo): Promise<UserAuth> {
+    const existing = await this.prisma.user.findUnique({
+      where: { email: userInfo.email },
+    });
+    if (existing) {
+      await this.prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          name: userInfo.name,
+
+          provider: userInfo.provider,
+          providerId: userInfo.id,
+        },
       });
+      const { accessToken, refreshToken } = await this.generateTokens(existing.id);
+
+      return {
+        id: existing.id,
+        accessToken,
+        refreshToken,
+        termsAndConditionsAccepted: existing.termsAndConditionsAccepted,
+      };
     }
+
+    const newUser = await this.prisma.user.create({
+      data: {
+        email: userInfo.email,
+        name: userInfo.name,
+        phone: '',
+        provider: userInfo.provider,
+        providerId: userInfo.id,
+        termsAndConditionsAccepted: false,
+      },
+      select: {
+        id: true,
+        email: true,
+        companyId: true,
+        termsAndConditionsAccepted: true,
+      },
+    });
+
+    await Promise.all([
+      this.prisma.termsAndConditionsAcceptance.upsert({
+        where: {
+          userId_termsAndConditionsId: {
+            userId: newUser.id,
+            termsAndConditionsId: 'TERMS_OF_SERVICE',
+          },
+        },
+        update: {},
+        create: {
+          userId: newUser.id,
+          termsAndConditionsId: 'TERMS_OF_SERVICE',
+          accepted: false,
+        },
+      }),
+      this.prisma.termsAndConditionsAcceptance.upsert({
+        where: {
+          userId_termsAndConditionsId: {
+            userId: newUser.id,
+            termsAndConditionsId: 'PRIVACY_POLICY',
+          },
+        },
+        update: {},
+        create: {
+          userId: newUser.id,
+          termsAndConditionsId: 'PRIVACY_POLICY',
+          accepted: false,
+        },
+      }),
+      this.prisma.termsAndConditionsAcceptance.upsert({
+        where: {
+          userId_termsAndConditionsId: {
+            userId: newUser.id,
+            termsAndConditionsId: 'MARKETING_POLICY',
+          },
+        },
+        update: {},
+        create: {
+          userId: newUser.id,
+          termsAndConditionsId: 'MARKETING_POLICY',
+          accepted: false,
+        },
+      }),
+    ]);
+
+    if (newUser.companyId) {
+      const companyInvite = await this.prisma.companyInvitation.findUnique({
+        where: {
+          companyId_userEmail: {
+            companyId: newUser.companyId,
+            userEmail: newUser.email,
+          },
+        },
+      });
+
+      if (companyInvite) {
+        const notificationCategory = await this.prisma.notificationCategory.findUnique({
+          where: { name: 'company-invitation' },
+        });
+        await this.prisma.notification.create({
+          data: {
+            title: '회사 초대 알림',
+            content: '회사 초대 알림',
+
+            link: `/company/${companyInvite.companyId}/invitation/${companyInvite.id}`,
+            metadata: { companyInvitationId: companyInvite.id },
+            notificationCategoryId: notificationCategory?.id,
+
+            target: newUser.id,
+          },
+        });
+      }
+    }
+
+    const { accessToken, refreshToken } = await this.generateTokens(newUser.id);
+    return {
+      id: newUser.id,
+      accessToken,
+      refreshToken,
+      termsAndConditionsAccepted: newUser.termsAndConditionsAccepted,
+    };
+  }
+
+  async signinupFromApple(
+    appleUserId: string,
+    identityToken: string,
+    name?: string
+  ): Promise<UserAuth> {
+    const { email } = decode(identityToken) as { email: string };
+
+    return this.signinup({
+      id: appleUserId,
+      email,
+      name,
+      provider: 'apple',
+    });
+  }
+
+  async signinupFromGoogle(googleAccessToken: string): Promise<UserAuth> {
+    const userInfo = await this.authOauthService.getGoogleUserInfo(googleAccessToken);
+
+    return this.signinup(userInfo);
   }
 
   async generateTokens(userId: string) {
@@ -43,85 +178,6 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
-
-  async signinup(idToken: string): Promise<UserAuth> {
-    // check token
-    const decoded = await this.verifyIdToken(idToken);
-    const {
-      uid,
-      email,
-      firebase: { sign_in_provider: provider },
-    } = decoded;
-
-    // check user
-    const existing = await this.prisma.user.findUnique({
-      where: { id: uid },
-    });
-    if (existing) {
-      const { accessToken, refreshToken } = await this.generateTokens(uid);
-
-      return {
-        id: uid,
-        accessToken,
-        refreshToken,
-        termsAndConditionsAccepted: existing.termsAndConditionsAccepted,
-      };
-    }
-
-    // get user record
-    const userRecord = await this.firebase.auth().getUser(uid);
-
-    const name = userRecord.displayName || 'user';
-    const phone = userRecord.phoneNumber;
-
-    // create user
-    const newUser = await this.prisma.user.create({
-      data: {
-        id: uid,
-        email,
-        name,
-        phone,
-        provider,
-        termsAndConditionsAccepted: false,
-      },
-    });
-
-    const companyInvite = await this.prisma.companyInvitation.findUnique({
-      where: {
-        companyId_userEmail: {
-          companyId: newUser.companyId,
-          userEmail: newUser.email,
-        },
-      },
-    });
-
-    if (companyInvite) {
-      const notificationCategory = await this.prisma.notificationCategory.findUnique({
-        where: { name: 'company-invitation' },
-      });
-      await this.prisma.notification.create({
-        data: {
-          title: '회사 초대 알림',
-          content: '회사 초대 알림',
-
-          link: `/company/${companyInvite.companyId}/invitation/${companyInvite.id}`,
-          metadata: { companyInvitationId: companyInvite.id },
-          notificationCategoryId: notificationCategory?.id,
-
-          target: newUser.id,
-        },
-      });
-    }
-
-    const { accessToken, refreshToken } = await this.generateTokens(newUser.id);
-    return {
-      id: newUser.id,
-      accessToken,
-      refreshToken,
-      termsAndConditionsAccepted: newUser.termsAndConditionsAccepted,
-    };
-  }
-
   async refreshToken(userId: string, refreshToken: string): Promise<GeneratedTokensDto> {
     let payload: JwtPayload;
     try {

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CompanyInvitationStatus, MembershipRole } from '@prisma/client';
 
 import { UserSchema } from '@/entities/user';
@@ -78,11 +78,11 @@ export class UserService {
         },
       },
     });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new UnauthorizedException('User not found');
 
     const pendingCompanyInvitations = await this.prisma.companyInvitation.findMany({
       where: {
-        companyId: user.company.id,
+        companyId: user.company?.id,
         status: CompanyInvitationStatus.PENDING,
       },
     });

@@ -61,4 +61,18 @@ export class CompanyInvitationController {
       body.acceptance
     );
   }
+
+  @Post(':companyId/accept-no-credential')
+  async acceptNoCredential(
+    @Param() param: { companyId: string },
+    @Body()
+    body: { email: string; name: string; companyRole: PrismaCompanyRole; acceptance: boolean }
+  ) {
+    return this.companyInvitationService.acceptInvitationNoCredential(
+      param.companyId,
+      body.email,
+      body.name,
+      body.acceptance
+    );
+  }
 }

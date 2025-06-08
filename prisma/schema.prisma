@@ -56,9 +56,10 @@ model User {
   email        String  @unique
   refreshToken String?
 
-  name     String?
-  phone    String?
-  provider String?
+  name       String?
+  phone      String?
+  provider   String?
+  providerId String?
 
   membershipId String?         @unique
   membership   UserMembership? @relation(fields: [membershipId], references: [id])

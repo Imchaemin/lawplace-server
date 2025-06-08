@@ -22,8 +22,7 @@ export class PrivateCorsInterceptor implements NestInterceptor {
     const res = context.switchToHttp().getResponse();
     const origin = req.headers.origin;
 
-    // TODO: change domain regex
-    const lawplacePattern = /.*lawplace.xyz/;
+    const lawplacePattern = /.*law-place.kr/;
 
     res.header('Access-Control-Allow-Methods', 'GET,OPTIONS,HEAD,PUT,PATCH,POST,DELETE');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
@@ -44,8 +43,7 @@ export class PrivateCorsInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    // TODO: change domain regex
-    res.header('Access-Control-Allow-Origin', 'https://');
+    res.header('Access-Control-Allow-Origin', 'https://law-place.kr');
     return next.handle();
   }
 }

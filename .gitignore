@@ -442,3 +442,4 @@ src/generated
 src/secrets
 
 prisma/clients
+secrets/

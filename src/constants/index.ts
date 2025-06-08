@@ -6,8 +6,16 @@ export const IS_PROD = ENV === 'prod';
 
 export const DISABLE_CRON = process.env.DISABLE_CRON === 'true';
 
-export const FE_URL = IS_LOCAL ? 'http://localhost:3000' : IS_DEV ? '' : '';
-export const BE_URL = IS_LOCAL ? 'http://localhost:8080' : IS_DEV ? '' : '';
+export const FE_URL = IS_LOCAL
+  ? 'http://localhost:3000'
+  : IS_DEV
+  ? 'https://law-place.kr'
+  : 'https://law-place.kr';
+export const BE_URL = IS_LOCAL
+  ? 'http://localhost:8080'
+  : IS_DEV
+  ? 'https://api-dev.law-place.kr'
+  : 'https://api.law-place.kr';
 
 export const JWT_SECRET = process.env.JWT_SECRET;
 export const JWT_DOMAIN = IS_LOCAL ? 'localhost' : IS_DEV ? '' : '';

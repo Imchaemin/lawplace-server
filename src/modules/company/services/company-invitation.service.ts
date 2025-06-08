@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   CompanyInvitationStatus as PrismaCompanyInvitationStatus,
+  CompanyRole,
   CompanyRole as PrismaCompanyRole,
 } from '@prisma/client';
+import { format } from 'date-fns';
 
+import { FE_URL } from '@/constants';
 import { CompanyInvitation, CompanyInvitationSchema } from '@/entities/company';
+import { sendInviteCompanyMail } from '@/libs/mail';
 import { PrismaService } from '@/prisma/services/prisma.service';
 
 @Injectable()
@@ -85,7 +89,16 @@ export class CompanyInvitationService {
       });
     }
 
-    // TODO: 초대 메일 발송
+    await sendInviteCompanyMail(
+      inviteeEmail,
+      `${user.company.name}에서 로플레이스 멤버십에 초대했어요.`,
+      user.company.name,
+      inviteeEmail,
+      user.company.membership.role,
+      format(user.company.membership.startAt, 'yyyy-MM-dd'),
+      format(user.company.membership.endAt, 'yyyy-MM-dd'),
+      `${FE_URL}/accept-invitation?companyId=${user.company.id}&email=${inviteeEmail}&name=${inviteeName}&companyRole=${user.company.membership.role}&acceptance=true`
+    );
   }
 
   async getInvitation(companyId: string, userId: string): Promise<CompanyInvitation> {
@@ -197,6 +210,59 @@ export class CompanyInvitationService {
       data: {
         companyId,
         companyRole: companyInvitation.companyRole,
+        creditId: company.credit.id,
+      },
+    });
+  }
+
+  async acceptInvitationNoCredential(
+    companyId: string,
+
+    email: string,
+    name: string,
+
+    acceptance: boolean
+  ): Promise<void> {
+    const companyInvitation = await this.prisma.companyInvitation.findUnique({
+      where: { companyId_userEmail: { companyId, userEmail: email } },
+    });
+    if (!companyInvitation) {
+      throw new NotFoundException('Company invitation not found');
+    }
+
+    await this.prisma.companyInvitation.update({
+      where: { id: companyInvitation.id },
+      data: {
+        status: acceptance
+          ? PrismaCompanyInvitationStatus.ACCEPTED
+          : PrismaCompanyInvitationStatus.REJECTED,
+      },
+    });
+
+    const company = await this.prisma.company.findUnique({
+      where: { id: companyId },
+      select: {
+        credit: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    await this.prisma.user.upsert({
+      where: { email },
+      update: {
+        name,
+        companyId,
+        companyRole: CompanyRole.COMPANY_LV1,
+        creditId: company.credit.id,
+      },
+      create: {
+        email,
+        name,
+        companyId,
+        companyRole: CompanyRole.COMPANY_LV1,
         creditId: company.credit.id,
       },
     });

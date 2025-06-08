@@ -1,10 +1,20 @@
 import { ZodValidationPipe } from '@anatine/zod-nestjs';
-import { Body, Controller, Post, UseInterceptors, UsePipes } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Req,
+  UnauthorizedException,
+  UseGuards,
+  UseInterceptors,
+  UsePipes,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { RequestWithAuth } from '@/dtos/auth.dto';
+import { AuthGuard } from '@/guards/auth.guard';
 import { PrivateCorsInterceptor } from '@/interceptors/cors.interceptor';
 
-import { SigninReqBodyDto } from '../dtos/admin-auth.dto';
 import { AdminAuthService } from '../services/admin-auth.service';
 
 @ApiTags('AUTH')
@@ -14,28 +24,19 @@ import { AdminAuthService } from '../services/admin-auth.service';
 export class AdminAuthController {
   constructor(private readonly adminAuthService: AdminAuthService) {}
 
-  @Post('signup')
-  async signup(@Body() body: SigninReqBodyDto) {
-    const userAuth = await this.adminAuthService.signupAdmin(body);
-    const { accessToken, refreshToken } = userAuth;
+  @Post('update-membership')
+  @UseGuards(AuthGuard)
+  async updateMembership(@Req() req: RequestWithAuth, @Body() body: { hashedKey: string }) {
+    if (body.hashedKey !== 'lawplace-admin-update-membership') {
+      throw new UnauthorizedException('Invalid hashed key');
+    }
+
+    const userAuth = await this.adminAuthService.updateMembership(req.auth.sub);
 
     return {
       userId: userAuth.id,
-      accessToken,
-      refreshToken,
-      termsAndConditionsAccepted: userAuth.termsAndConditionsAccepted,
-    };
-  }
-
-  @Post('signin')
-  async signin(@Body() body: { email: string }) {
-    const userAuth = await this.adminAuthService.signinWithPreset(body.email);
-    const { accessToken, refreshToken } = userAuth;
-
-    return {
-      userId: userAuth.id,
-      accessToken,
-      refreshToken,
+      accessToken: userAuth.accessToken,
+      refreshToken: userAuth.refreshToken,
       termsAndConditionsAccepted: userAuth.termsAndConditionsAccepted,
     };
   }

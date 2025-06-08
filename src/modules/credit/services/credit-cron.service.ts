@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CronExpression } from '@nestjs/schedule';
 import { Cron } from '@nestjs/schedule';
+import { CreditTransactionType } from '@prisma/client';
 import { addMonths, set } from 'date-fns';
 import { chunk } from 'lodash';
 
@@ -39,6 +40,16 @@ export class CreditCronService {
             lastRenewalAt: now,
             nextRenewalAt,
             currentCredit: defaultCredit,
+          },
+        });
+
+        await this.prisma.creditTransaction.create({
+          data: {
+            creditId: credit.id,
+            name: '크래딧 충전',
+            amount: defaultCredit,
+            type: CreditTransactionType.CHARGE,
+            sign: 1,
           },
         });
       }

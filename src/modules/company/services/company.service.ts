@@ -32,6 +32,7 @@ export class CompanyService {
     const companyInvitations = await this.prisma.companyInvitation.findMany({
       where: {
         companyId,
+        status: CompanyInvitationStatus.PENDING,
       },
       select: {
         id: true,
