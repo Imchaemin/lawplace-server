@@ -79,6 +79,7 @@ model User {
   termsAndConditionsAccepted   Boolean                        @default(false)
 
   notificationReads NotificationRead[]
+  pushTokens        PushToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -388,4 +389,20 @@ model AppConfig {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+}
+
+model PushToken {
+  id String @id @default(uuid())
+
+  platform String
+  deviceId String
+  token    String
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([deviceId, token, userId])
 }

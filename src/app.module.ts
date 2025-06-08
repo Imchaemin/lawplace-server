@@ -11,6 +11,7 @@ import { InitModule } from './modules/init/init.module';
 import { MeetingRoomModule } from './modules/meeting-room/meeting-room.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
 import { NoticeModule } from './modules/notice/notice.module';
+import { NotificationModule } from './modules/notification/notification.module';
 import { UserModule } from './modules/user/user.module';
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { UserModule } from './modules/user/user.module';
     MeetingRoomModule,
     NoticeModule,
     UserModule,
+    NotificationModule,
   ],
   controllers: [],
   providers: [],
