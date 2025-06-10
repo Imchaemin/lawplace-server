@@ -115,17 +115,38 @@ export class AuthService {
         },
       });
 
+      const company = await this.prisma.company.findUnique({
+        where: { id: companyInvite.companyId },
+        select: {
+          name: true,
+          membership: {
+            select: {
+              startAt: true,
+              endAt: true,
+            },
+          },
+        },
+      });
+
       if (companyInvite) {
         const notificationCategory = await this.prisma.notificationCategory.findUnique({
-          where: { name: 'company-invitation' },
+          where: { name: 'COMPANY_INVITATION' },
         });
         await this.prisma.notification.create({
           data: {
             title: '회사 초대 알림',
             content: '회사 초대 알림',
 
-            link: `/company/${companyInvite.companyId}/invitation/${companyInvite.id}`,
-            metadata: { companyInvitationId: companyInvite.id },
+            link: '',
+            metadata: {
+              companyInvitationId: companyInvite.id,
+              companyId: companyInvite.companyId,
+              companyName: company.name,
+
+              membershipRole: companyInvite.membershipRole,
+              membershipStartAt: company.membership.startAt,
+              membershipEndAt: company.membership.endAt,
+            },
             notificationCategoryId: notificationCategory?.id,
 
             target: newUser.id,

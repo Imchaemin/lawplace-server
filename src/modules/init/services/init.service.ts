@@ -10,6 +10,7 @@ export class InitService implements OnModuleInit {
   async onModuleInit() {
     await this.initTerms();
     await this.initAppConfig();
+    await this.initNotificationCategory();
     await this.initMeetingRoom();
     await this.initOffice();
   }
@@ -56,6 +57,36 @@ export class InitService implements OnModuleInit {
         minSupportedVersion: '0.0.0',
       },
     });
+  }
+
+  async initNotificationCategory() {
+    await Promise.all([
+      this.prisma.notificationCategory.upsert({
+        where: { id: 'COMPANY_INVITATION' },
+        update: {},
+        create: { id: 'COMPANY_INVITATION', name: 'COMPANY_INVITATION' },
+      }),
+      this.prisma.notificationCategory.upsert({
+        where: { id: 'ADD_MEMBER' },
+        update: {},
+        create: { id: 'ADD_MEMBER', name: 'ADD_MEMBER' },
+      }),
+      this.prisma.notificationCategory.upsert({
+        where: { id: 'REMOVE_MEMBER' },
+        update: {},
+        create: { id: 'REMOVE_MEMBER', name: 'REMOVE_MEMBER' },
+      }),
+      this.prisma.notificationCategory.upsert({
+        where: { id: 'COMMUNITY' },
+        update: {},
+        create: { id: 'COMMUNITY', name: 'COMMUNITY' },
+      }),
+      this.prisma.notificationCategory.upsert({
+        where: { id: 'ETC' },
+        update: {},
+        create: { id: 'ETC', name: 'ETC' },
+      }),
+    ]);
   }
 
   async initMeetingRoom() {

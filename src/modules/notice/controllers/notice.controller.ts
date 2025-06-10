@@ -1,5 +1,5 @@
 import { ZodValidationPipe } from '@anatine/zod-nestjs';
-import { Controller, Get, Param, Query, UseInterceptors, UsePipes } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { Notice, NoticeSimple } from '@/entities/notice';
@@ -18,6 +18,11 @@ export class NoticeController {
   @Get(':noticeId')
   async getNotice(@Param() params: NoticeParamsDto): Promise<Notice> {
     return this.noticeService.getNotice(params.noticeId);
+  }
+
+  @Post(':noticeId/propagate')
+  async propagateNotice(@Param() params: NoticeParamsDto): Promise<void> {
+    return this.noticeService.propagateNotice(params.noticeId);
   }
 }
 

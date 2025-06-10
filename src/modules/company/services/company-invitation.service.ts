@@ -65,14 +65,14 @@ export class CompanyInvitationService {
 
     if (invitee) {
       const notificationCategory = await this.prisma.notificationCategory.findUnique({
-        where: { name: 'MEMBERSHIP_INVITATION' },
+        where: { name: 'COMPANY_INVITATION' },
       });
       await this.prisma.notification.create({
         data: {
           title: '회사 초대 알림',
           content: '회사 초대 알림',
 
-          link: `/company/${user.company.id}/invitation/${companyInvite.id}`,
+          link: '',
           metadata: {
             companyId: user.company.id,
             companyName: user.company.name,
@@ -101,14 +101,9 @@ export class CompanyInvitationService {
     );
   }
 
-  async getInvitation(companyId: string, userId: string): Promise<CompanyInvitation> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true },
-    });
-
+  async getInvitation(companyInvitationId: string): Promise<CompanyInvitation> {
     const companyInvitation = await this.prisma.companyInvitation.findUnique({
-      where: { companyId_userEmail: { companyId, userEmail: user.email } },
+      where: { id: companyInvitationId },
       select: {
         id: true,
 
@@ -171,15 +166,14 @@ export class CompanyInvitationService {
     });
   }
 
-  async acceptInvitation(userId: string, companyId: string, acceptance: boolean): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        email: true,
-      },
-    });
+  async acceptInvitation(
+    userId: string,
+    companyId: string,
+    companyInvitationId: string,
+    acceptance: boolean
+  ): Promise<void> {
     const companyInvitation = await this.prisma.companyInvitation.findUnique({
-      where: { companyId_userEmail: { companyId, userEmail: user.email } },
+      where: { id: companyInvitationId },
     });
     if (!companyInvitation) {
       throw new NotFoundException('Company invitation not found');
@@ -193,26 +187,63 @@ export class CompanyInvitationService {
           : PrismaCompanyInvitationStatus.REJECTED,
       },
     });
-
-    const company = await this.prisma.company.findUnique({
-      where: { id: companyId },
+    const companyAdmins = await this.prisma.user.findMany({
+      where: {
+        companyId,
+        companyRole: PrismaCompanyRole.COMPANY_ADMIN,
+      },
       select: {
-        credit: {
-          select: {
-            id: true,
+        id: true,
+      },
+    });
+
+    if (acceptance) {
+      const company = await this.prisma.company.findUnique({
+        where: { id: companyId },
+        select: {
+          credit: {
+            select: {
+              id: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        companyId,
-        companyRole: companyInvitation.companyRole,
-        creditId: company.credit.id,
-      },
-    });
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          companyId,
+          companyRole: companyInvitation.companyRole,
+          creditId: company.credit.id,
+        },
+      });
+
+      await Promise.all(
+        companyAdmins.map(admin =>
+          this.prisma.notification.create({
+            data: {
+              title: '멤버 추가',
+              content: `${companyInvitation.userName}님이 멤버로 추가되었습니다.`,
+              notificationCategoryId: 'ADD_MEMBER',
+              target: admin.id,
+            },
+          })
+        )
+      );
+    } else {
+      await Promise.all(
+        companyAdmins.map(admin =>
+          this.prisma.notification.create({
+            data: {
+              title: '멤버 초대 거절',
+              content: `${companyInvitation.userName}님이 멤버초대를 거절했습니다.`,
+              notificationCategoryId: 'ADD_MEMBER',
+              target: admin.id,
+            },
+          })
+        )
+      );
+    }
   }
 
   async acceptInvitationNoCredential(
@@ -266,5 +297,27 @@ export class CompanyInvitationService {
         creditId: company.credit.id,
       },
     });
+
+    const companyAdmins = await this.prisma.user.findMany({
+      where: {
+        companyId,
+        companyRole: PrismaCompanyRole.COMPANY_ADMIN,
+      },
+      select: {
+        id: true,
+      },
+    });
+    await Promise.all(
+      companyAdmins.map(admin =>
+        this.prisma.notification.create({
+          data: {
+            title: '멤버 추가',
+            content: `${name}님이 멤버로 추가되었습니다.`,
+            notificationCategoryId: 'ADD_MEMBER',
+            target: admin.id,
+          },
+        })
+      )
+    );
   }
 }

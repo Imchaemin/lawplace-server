@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreditTransactionType } from '@prisma/client';
 import { add, differenceInMinutes, isAfter, isBefore, set } from 'date-fns';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 
 import { MeetingRoom, MeetingRoomSchema } from '@/entities/meeting-room';
 import { PrismaService } from '@/prisma/services/prisma.service';
@@ -9,6 +10,8 @@ import { GetMeetingRoomsQueryDto } from '../dtos/meeting-room.dto';
 
 @Injectable()
 export class MeetingRoomService {
+  private readonly TIMEZONE = 'Asia/Seoul'; // 한국 타임존
+
   constructor(private readonly prisma: PrismaService) {}
 
   async getMeetingRooms(query: GetMeetingRoomsQueryDto): Promise<MeetingRoom[]> {
@@ -184,13 +187,24 @@ export class MeetingRoomService {
   }
 
   /**
-   * "HH:mm" 문자열을 기준 날짜의 시간으로 변환
+   * "HH:mm" 문자열을 기준 날짜의 시간으로 변환 (한국 타임존 기준)
    */
   toDateWithTime(baseDate: Date, time: string): Date {
     const [hours, minutes] = time.split(':').map(Number);
-    const date = new Date(baseDate);
-    date.setHours(hours, minutes, 0, 0);
-    return date;
+
+    // 한국 타임존으로 변환된 기준 날짜
+    const zonedBaseDate = toZonedTime(baseDate, this.TIMEZONE);
+
+    // 같은 날짜에서 시간만 변경
+    const zonedDateTime = set(zonedBaseDate, {
+      hours,
+      minutes,
+      seconds: 0,
+      milliseconds: 0,
+    });
+
+    // 한국 타임존 시간을 UTC로 변환하여 반환
+    return fromZonedTime(zonedDateTime, this.TIMEZONE);
   }
 
   calculatePeakTimeslots(

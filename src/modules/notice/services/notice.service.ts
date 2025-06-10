@@ -68,4 +68,37 @@ export class NoticeService {
     const res = notices.map(notice => NoticeSimpleSchema.parse(notice));
     return res;
   }
+
+  async propagateNotice(noticeId: string): Promise<void> {
+    const notice = await this.prisma.notice.findUnique({
+      where: { id: noticeId },
+    });
+
+    const notificationCategory = await this.prisma.notificationCategory.findUnique({
+      where: { name: 'COMMUNITY' },
+    });
+
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+      },
+    });
+
+    await Promise.all(
+      users.map(user =>
+        this.prisma.notification.create({
+          data: {
+            title: notice.title,
+            content: notice.content,
+            link: '',
+            notificationCategoryId: notificationCategory.id,
+            metadata: {
+              noticeId: notice.id,
+            },
+            target: user.id,
+          },
+        })
+      )
+    );
+  }
 }

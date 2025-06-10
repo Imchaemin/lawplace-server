@@ -31,10 +31,13 @@ import { CompanyInvitationService } from '../services/company-invitation.service
 export class CompanyInvitationController {
   constructor(private readonly companyInvitationService: CompanyInvitationService) {}
 
-  @Get(':companyId/invitation')
+  @Get(':companyId/invitation/:companyInvitationId')
   @UseGuards(AuthGuard)
-  async getInvitation(@Req() req: RequestWithAuth, @Param() param: { companyId: string }) {
-    return this.companyInvitationService.getInvitation(param.companyId, req.auth.sub);
+  async getInvitation(
+    @Req() req: RequestWithAuth,
+    @Param() param: { companyId: string; companyInvitationId: string }
+  ) {
+    return this.companyInvitationService.getInvitation(param.companyInvitationId);
   }
 
   @Post(':companyId/invite')
@@ -53,11 +56,12 @@ export class CompanyInvitationController {
   async accept(
     @Req() req: RequestWithAuth,
     @Param() param: { companyId: string },
-    @Body() body: { acceptance: boolean }
+    @Body() body: { companyInvitationId: string; acceptance: boolean }
   ) {
     return this.companyInvitationService.acceptInvitation(
       req.auth.sub,
       param.companyId,
+      body.companyInvitationId,
       body.acceptance
     );
   }
