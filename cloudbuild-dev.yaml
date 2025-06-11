@@ -31,7 +31,7 @@ steps:
       [
         'build',
         '-t',
-        'asia-northeast1-docker.pkg.dev/LAWPLACE/lawplace/lawplace-server--dev:$TAG_NAME-$BUILD_ID-$SHORT_SHA',
+        'asia-northeast1-docker.pkg.dev/lawplace-0000/lawplace/lawplace-server--dev:$TAG_NAME-$BUILD_ID-$SHORT_SHA',
         '-f',
         'deploy.dockerfile',
         '.',
@@ -43,7 +43,7 @@ steps:
     args:
       [
         'push',
-        'asia-northeast1-docker.pkg.dev/LAWPLACE/lawplace/lawplace-server--dev:$TAG_NAME-$BUILD_ID-$SHORT_SHA',
+        'asia-northeast1-docker.pkg.dev/lawplace-0000/lawplace/lawplace-server--dev:$TAG_NAME-$BUILD_ID-$SHORT_SHA',
       ]
 
   # Deploy to Cloud Run
@@ -59,7 +59,7 @@ steps:
         '--service-account',
         'superuser@lawplace-0000.iam.gserviceaccount.com',
         '--image',
-        'asia-northeast1-docker.pkg.dev/LAWPLACE/lawplace/lawplace-server--dev:$TAG_NAME-$BUILD_ID-$SHORT_SHA',
+        'asia-northeast1-docker.pkg.dev/lawplace-0000/lawplace/lawplace-server--dev:$TAG_NAME-$BUILD_ID-$SHORT_SHA',
         '--region',
         'asia-northeast1',
         '--platform',
@@ -82,4 +82,4 @@ steps:
       ]
 
 images:
-  - 'asia-northeast1-docker.pkg.dev/LAWPLACE/lawplace/lawplace-server--dev:$TAG_NAME-$BUILD_ID-$SHORT_SHA'
+  - 'asia-northeast1-docker.pkg.dev/lawplace-0000/lawplace/lawplace-server--dev:$TAG_NAME-$BUILD_ID-$SHORT_SHA'
