@@ -57,7 +57,7 @@ steps:
         'deploy',
         'lawplace-server--dev',
         '--service-account',
-        'superuser@lawplace-0000.iam.gserviceaccount.com'
+        'superuser@lawplace-0000.iam.gserviceaccount.com',
         '--image',
         'asia-northeast1-docker.pkg.dev/LAWPLACE/lawplace-server/lawplace-server--dev:$TAG_NAME-$BUILD_ID-$SHORT_SHA',
         '--region',
