@@ -14,11 +14,11 @@ export const FE_URL = IS_LOCAL
 export const BE_URL = IS_LOCAL
   ? 'http://localhost:8080'
   : IS_DEV
-  ? 'https://api-dev.law-place.kr'
-  : 'https://api.law-place.kr';
+  ? 'https://lawplace-server--dev-482142712572.asia-northeast1.run.app'
+  : 'https://lawplace-server--prod-482142712572.asia-northeast1.run.app';
 
 export const JWT_SECRET = process.env.JWT_SECRET;
-export const JWT_DOMAIN = IS_LOCAL ? 'localhost' : IS_DEV ? '' : '';
+export const JWT_DOMAIN = IS_LOCAL ? 'localhost' : IS_DEV ? 'lawplace' : 'lawplace';
 
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -26,4 +26,3 @@ export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 export const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID;
 export const APPLE_TEAM_ID = process.env.APPLE_TEAM_ID;
 export const APPLE_KEY_ID = process.env.APPLE_KEY_ID;
-export const APPLE_PRIVATE_KEY = process.env.APPLE_PRIVATE_KEY;
