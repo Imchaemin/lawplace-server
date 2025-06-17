@@ -62,14 +62,14 @@ model User {
   providerId String?
 
   membershipId String?         @unique
-  membership   UserMembership? @relation(fields: [membershipId], references: [id])
+  membership   UserMembership? @relation(fields: [membershipId], references: [id], onDelete: Cascade)
 
   companyId   String?
-  company     Company?     @relation(fields: [companyId], references: [id])
+  company     Company?     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyRole CompanyRole? @default(COMPANY_LV0)
 
   creditId String?
-  credit   Credit? @relation(fields: [creditId], references: [id])
+  credit   Credit? @relation(fields: [creditId], references: [id], onDelete: Cascade)
 
   meetingRoomReservations MeetingRoomReservation[]
   invitations             Invitation[]
@@ -94,7 +94,7 @@ model Company {
   employees User[]
 
   membershipId String?            @unique
-  membership   CompanyMembership? @relation(fields: [membershipId], references: [id])
+  membership   CompanyMembership? @relation(fields: [membershipId], references: [id], onDelete: Cascade)
 
   companyInvitations CompanyInvitation[]
 
@@ -106,7 +106,7 @@ model CompanyInvitation {
   id String @id @default(uuid())
 
   companyId String
-  company   Company @relation(fields: [companyId], references: [id])
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   userName  String
   userEmail String
@@ -136,7 +136,7 @@ model UserMembership {
   user User?
 
   officeId String
-  office   Office @relation(fields: [officeId], references: [id])
+  office   Office @relation(fields: [officeId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -154,7 +154,7 @@ model CompanyMembership {
   company Company?
 
   officeId String
-  office   Office @relation(fields: [officeId], references: [id])
+  office   Office @relation(fields: [officeId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -181,7 +181,7 @@ model Credit {
   users User[]
 
   companyId String?  @unique
-  company   Company? @relation(fields: [companyId], references: [id])
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   defaultCredit Decimal @default(0.0) @db.Decimal(10, 2)
   currentCredit Decimal @default(0.0) @db.Decimal(10, 2)
@@ -199,13 +199,13 @@ model CreditTransaction {
   id String @id @default(uuid())
 
   creditId String
-  credit   Credit @relation(fields: [creditId], references: [id])
+  credit   Credit @relation(fields: [creditId], references: [id], onDelete: Cascade)
 
   name        String
   description String?
 
   userId String?
-  user   User?   @relation(fields: [userId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   type   CreditTransactionType
   amount Decimal               @db.Decimal(10, 2)
@@ -246,11 +246,11 @@ model MeetingRoom {
 model MeetingRoomReservation {
   id String @id @default(uuid())
 
-  meetingRoom   MeetingRoom? @relation(fields: [meetingRoomId], references: [id])
+  meetingRoom   MeetingRoom? @relation(fields: [meetingRoomId], references: [id], onDelete: Cascade)
   meetingRoomId String?
 
   userId String?
-  user   User?   @relation(fields: [userId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   startAt DateTime
   endAt   DateTime
@@ -265,7 +265,7 @@ model Invitation {
   id String @id @default(uuid())
 
   inviterId String
-  inviter   User   @relation(fields: [inviterId], references: [id])
+  inviter   User   @relation(fields: [inviterId], references: [id], onDelete: Cascade)
 
   visitorName  String
   visitorEmail String?
@@ -295,7 +295,7 @@ model Notice {
   metadata Json?
 
   noticeCategoryId String?
-  noticeCategory   NoticeCategory? @relation(fields: [noticeCategoryId], references: [id])
+  noticeCategory   NoticeCategory? @relation(fields: [noticeCategoryId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -317,7 +317,7 @@ model Notification {
   metadata Json?
 
   notificationCategoryId String?
-  notificationCategory   NotificationCategory? @relation(fields: [notificationCategoryId], references: [id])
+  notificationCategory   NotificationCategory? @relation(fields: [notificationCategoryId], references: [id], onDelete: Cascade)
 
   target String?
 
@@ -338,10 +338,10 @@ model NotificationRead {
   id String @id @default(uuid())
 
   notificationId String
-  notification   Notification @relation(fields: [notificationId], references: [id])
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   read Boolean @default(false)
 
@@ -367,10 +367,10 @@ model TermsAndConditionsAcceptance {
   id String @id @default(uuid())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   termsAndConditionsId String
-  termsAndConditions   TermsAndConditions @relation(fields: [termsAndConditionsId], references: [id])
+  termsAndConditions   TermsAndConditions @relation(fields: [termsAndConditionsId], references: [id], onDelete: Cascade)
 
   accepted   Boolean   @default(false)
   acceptedAt DateTime?
@@ -399,7 +399,7 @@ model PushToken {
   token    String
 
   userId String?
-  user   User?   @relation(fields: [userId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

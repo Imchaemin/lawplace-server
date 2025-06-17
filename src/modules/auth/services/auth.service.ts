@@ -241,4 +241,21 @@ export class AuthService {
     const tokens = await this.generateTokens(userId);
     return tokens;
   }
+
+  async deleteUser(userId: string) {
+    if (!userId) {
+      throw new UnauthorizedException({
+        type: 'UNAUTHORIZED',
+        message: 'user id is required',
+      });
+    }
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException({
+        type: 'UNAUTHORIZED',
+        message: 'user not found',
+      });
+    }
+    await this.prisma.user.delete({ where: { id: userId } });
+  }
 }

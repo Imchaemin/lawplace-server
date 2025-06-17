@@ -36,9 +36,10 @@ export class UserTermsConditionsService {
     });
 
     const termsAndConditionsAcceptances =
-      userWithTermsAndConditionsAcceptance.termsAndConditionsAcceptance.map(acceptance =>
-        UserTermsAndConditionsAcceptanceSchema.parse(acceptance)
-      );
+      userWithTermsAndConditionsAcceptance?.termsAndConditionsAcceptance?.map(acceptance => {
+        if (!acceptance) return null;
+        return UserTermsAndConditionsAcceptanceSchema.parse(acceptance);
+      });
     return termsAndConditionsAcceptances;
   }
 

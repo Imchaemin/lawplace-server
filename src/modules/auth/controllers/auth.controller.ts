@@ -2,13 +2,18 @@ import { ZodValidationPipe } from '@anatine/zod-nestjs';
 import {
   Body,
   Controller,
+  Delete,
   Post,
+  Req,
   UnauthorizedException,
+  UseGuards,
   UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { RequestWithAuth } from '@/dtos/auth.dto';
+import { AuthGuard } from '@/guards/auth.guard';
 import { PrivateCorsInterceptor } from '@/interceptors/cors.interceptor';
 
 import { RefreshReqBodyDto } from '../dtos/auth.dto';
@@ -29,5 +34,11 @@ export class AuthController {
         message: 'refreshToken is required',
       });
     return this.authService.refreshToken(body.userId, body.refreshToken);
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete('delete')
+  async delete(@Req() req: RequestWithAuth) {
+    return this.authService.deleteUser(req?.auth?.sub);
   }
 }
