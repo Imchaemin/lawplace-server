@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { FeatureFlag, FeatureFlagSchema } from '@/entities/feature-flag';
 import { AppConfig, AppConfigSchema } from '@/entities/metadata';
 import { PrismaService } from '@/prisma/services/prisma.service';
 
@@ -16,5 +17,24 @@ export class MetadataService {
     });
 
     return AppConfigSchema.parse(appConfig);
+  }
+
+  async getFeatureFlags(): Promise<FeatureFlag[]> {
+    const featureFlags = await this.prisma.featureFlag.findMany({
+      select: {
+        id: true,
+        data: true,
+      },
+    });
+
+    return featureFlags.map(featureFlag => FeatureFlagSchema.parse(featureFlag));
+  }
+
+  async getFeatureFlag(id: string): Promise<FeatureFlag> {
+    const featureFlag = await this.prisma.featureFlag.findUnique({
+      where: { id },
+    });
+
+    return FeatureFlagSchema.parse(featureFlag);
   }
 }

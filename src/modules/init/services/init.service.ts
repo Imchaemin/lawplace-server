@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { TermsAndConditionsType } from '@prisma/client';
 
+import { IS_AUDIT } from '@/constants';
 import { PrismaService } from '@/prisma/services/prisma.service';
 
 @Injectable()
@@ -13,6 +14,7 @@ export class InitService implements OnModuleInit {
     await this.initNotificationCategory();
     await this.initMeetingRoom();
     await this.initOffice();
+    await this.initFeatureFlag();
   }
 
   async initTerms() {
@@ -174,6 +176,19 @@ export class InitService implements OnModuleInit {
         id: 'OFFICE_1',
         name: '로플레이스 안국',
         address: '서울특별시 종로구 율곡로 33, 1001호 (안국동, 안국빌딩)',
+      },
+    });
+  }
+
+  async initFeatureFlag() {
+    await this.prisma.featureFlag.upsert({
+      where: { id: 'FEATURE_FLAG_AUDIT' },
+      update: {
+        data: { audit: IS_AUDIT, minVersion: '0.0.0' },
+      },
+      create: {
+        id: 'FEATURE_FLAG_AUDIT',
+        data: { audit: IS_AUDIT, minVersion: '0.0.0' },
       },
     });
   }

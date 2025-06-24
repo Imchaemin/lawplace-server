@@ -391,6 +391,14 @@ model AppConfig {
   updatedAt DateTime @default(now()) @updatedAt
 }
 
+model FeatureFlag {
+  id   String @id @default(uuid())
+  data Json   @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
 model PushToken {
   id String @id @default(uuid())
 
