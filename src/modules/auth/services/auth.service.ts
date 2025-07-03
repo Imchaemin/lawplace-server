@@ -199,6 +199,7 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
+
   async refreshToken(userId: string, refreshToken: string): Promise<GeneratedTokensDto> {
     let payload: JwtPayload;
     try {

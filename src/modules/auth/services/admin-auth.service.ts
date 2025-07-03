@@ -88,4 +88,19 @@ export class AdminAuthService {
       termsAndConditionsAccepted: updated.termsAndConditionsAccepted,
     };
   }
+
+  async getAndroidAuditTester() {
+    const user = await this.prisma.user.findUnique({
+      where: { id: 'android-audit-tester' },
+    });
+    if (!user) throw new Error('User not found');
+
+    const { accessToken, refreshToken } = await this.authService.generateTokens(user.id);
+    return {
+      id: user.id,
+      accessToken,
+      refreshToken,
+      termsAndConditionsAccepted: true,
+    };
+  }
 }

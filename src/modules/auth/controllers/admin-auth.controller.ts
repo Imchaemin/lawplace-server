@@ -2,6 +2,7 @@ import { ZodValidationPipe } from '@anatine/zod-nestjs';
 import {
   Body,
   Controller,
+  Get,
   Post,
   Req,
   UnauthorizedException,
@@ -39,5 +40,11 @@ export class AdminAuthController {
       refreshToken: userAuth.refreshToken,
       termsAndConditionsAccepted: userAuth.termsAndConditionsAccepted,
     };
+  }
+
+  @Get('android-audit-tester')
+  async getAndroidAuditTester() {
+    const userAuth = await this.adminAuthService.getAndroidAuditTester();
+    return userAuth;
   }
 }
