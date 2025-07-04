@@ -36,16 +36,18 @@ export class AuthOauthController {
   }
 
   @Post('apple/callback')
-  async appleCallback(@Body() body: { appleUserId: string; identityToken: string; name?: string }) {
+  async appleCallback(
+    @Body() body: { appleUserId?: string; identityToken: string; name?: string }
+  ) {
     const { appleUserId, identityToken, name } = body;
-    if (!appleUserId || !identityToken) {
+    if (!identityToken) {
       throw new BadRequestException({
         type: 'BAD_REQUEST',
-        message: 'appleUserId, email, missing',
+        message: 'identityToken is required',
       });
     }
 
-    const userAuth = await this.authService.signinupFromApple(appleUserId, identityToken, name);
+    const userAuth = await this.authService.signinupFromApple(identityToken, appleUserId, name);
     const { accessToken, refreshToken } = userAuth;
 
     const user = await this.prisma.user.findUnique({

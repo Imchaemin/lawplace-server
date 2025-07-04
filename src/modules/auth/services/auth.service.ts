@@ -165,16 +165,16 @@ export class AuthService {
   }
 
   async signinupFromApple(
-    appleUserId: string,
     identityToken: string,
+    appleUserId?: string,
     name?: string
   ): Promise<UserAuth> {
-    const { email } = decode(identityToken) as { email: string };
+    const { sub, email } = decode(identityToken) as { email: string; sub: string };
 
     return this.signinup({
-      id: appleUserId,
+      id: appleUserId || sub.toString(),
       email,
-      name,
+      name: name ? name : '사용자',
       provider: 'apple',
     });
   }
