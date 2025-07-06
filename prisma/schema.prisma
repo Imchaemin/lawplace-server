@@ -133,7 +133,8 @@ model UserMembership {
   startAt DateTime
   endAt   DateTime
 
-  user User?
+  user     User?
+  capacity Int   @default(1)
 
   officeId String
   office   Office @relation(fields: [officeId], references: [id], onDelete: Cascade)
@@ -151,7 +152,8 @@ model CompanyMembership {
   startAt DateTime
   endAt   DateTime
 
-  company Company?
+  company  Company?
+  capacity Int      @default(1)
 
   officeId String
   office   Office @relation(fields: [officeId], references: [id], onDelete: Cascade)

@@ -181,14 +181,25 @@ export class InitService implements OnModuleInit {
   }
 
   async initFeatureFlag() {
+    const featureFlag = await this.prisma.featureFlag.findUnique({
+      where: { id: 'FEATURE_FLAG_AUDIT' },
+    });
+
+    if (featureFlag) return;
     await this.prisma.featureFlag.upsert({
       where: { id: 'FEATURE_FLAG_AUDIT' },
       update: {
-        data: { audit: IS_AUDIT, minVersion: '0.0.0' },
+        data: {
+          ios: { audit: IS_AUDIT, minVersion: '2.0.0' },
+          android: { audit: IS_AUDIT, minVersion: '2.0.0' },
+        },
       },
       create: {
         id: 'FEATURE_FLAG_AUDIT',
-        data: { audit: IS_AUDIT, minVersion: '0.0.0' },
+        data: {
+          ios: { audit: IS_AUDIT, minVersion: '2.0.0' },
+          android: { audit: IS_AUDIT, minVersion: '2.0.0' },
+        },
       },
     });
   }
