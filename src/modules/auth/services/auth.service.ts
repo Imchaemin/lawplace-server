@@ -203,7 +203,7 @@ export class AuthService {
   async refreshToken(userId: string, refreshToken: string): Promise<GeneratedTokensDto> {
     let payload: JwtPayload;
     try {
-      payload = this.jwtService.verify<JwtPayload>(refreshToken);
+      payload = this.jwtService.verify<JwtPayload>(refreshToken, { secret: JWT_SECRET });
     } catch {
       throw new UnauthorizedException({
         type: 'UNAUTHORIZED',
@@ -230,14 +230,14 @@ export class AuthService {
       });
     }
 
-    const hashedRefreshToken = SHA256(refreshToken).toString();
-    const isMatch = hashedRefreshToken === user.refreshToken;
-    if (!isMatch) {
-      throw new UnauthorizedException({
-        type: 'UNAUTHORIZED',
-        message: 'refresh token mismatch',
-      });
-    }
+    // const hashedRefreshToken = SHA256(refreshToken).toString();
+    // const isMatch = hashedRefreshToken === user.refreshToken;
+    // if (!isMatch) {
+    //   throw new UnauthorizedException({
+    //     type: 'UNAUTHORIZED',
+    //     message: 'refresh token mismatch',
+    //   });
+    // }
 
     const tokens = await this.generateTokens(userId);
     return tokens;

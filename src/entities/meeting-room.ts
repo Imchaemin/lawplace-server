@@ -5,10 +5,11 @@ import { DecimalSchema } from './decimal';
 export const MeetingRoomReservationSchema = z.object({
   id: z.string(),
 
+  meetingRoomId: z.string().nullable().optional(),
   user: z.object({
     id: z.string(),
     name: z.string(),
-    companyName: z.string().nullable(),
+    companyName: z.string().nullable().optional(),
   }),
 
   startAt: z.date(),

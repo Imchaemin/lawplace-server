@@ -24,6 +24,10 @@ steps:
           }
         ' > env.yaml
 
+        # set credentials
+        gcloud secrets versions access latest --secret=lawplace-cloudstorage > /workspace/service-account-file.json
+        export GOOGLE_APPLICATION_CREDENTIALS="/workspace/service-account-file.json"
+
   # Build the container image
   - id: 'BUILD'
     name: 'gcr.io/cloud-builders/docker'
