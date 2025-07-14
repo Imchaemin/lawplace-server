@@ -10,8 +10,10 @@ import {
   AdminMeetingRoomController,
   AdminMeetingRoomsController,
 } from './controllers/meeting-room.controller';
+import { AdminNoticeController, AdminNoticesController } from './controllers/notice.controller';
 import { AdminCompanyMemberService } from './services/admin-company-member.service';
 import { AdminMeetingRoomService } from './services/admin-meeting-room.service';
+import { AdminNoticeService } from './services/admin-notice.service';
 
 @Module({
   imports: [PrismaModule, HttpModule, JwtModule, UserModule],
@@ -19,8 +21,10 @@ import { AdminMeetingRoomService } from './services/admin-meeting-room.service';
     AdminCompanyMemberController,
     AdminMeetingRoomController,
     AdminMeetingRoomsController,
+    AdminNoticeController,
+    AdminNoticesController,
   ],
-  providers: [AdminCompanyMemberService, AdminMeetingRoomService],
-  exports: [AdminCompanyMemberService, AdminMeetingRoomService],
+  providers: [AdminCompanyMemberService, AdminMeetingRoomService, AdminNoticeService],
+  exports: [AdminCompanyMemberService, AdminMeetingRoomService, AdminNoticeService],
 })
 export class AdminModule {}
