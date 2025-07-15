@@ -23,6 +23,7 @@ export class PrivateCorsInterceptor implements NestInterceptor {
     const origin = req.headers.origin;
 
     const lawplacePattern = /.*law-place.kr/;
+    const lawplaceAdminPattern = /.*lawplace-web-admin.*/;
 
     res.header('Access-Control-Allow-Methods', 'GET,OPTIONS,HEAD,PUT,PATCH,POST,DELETE');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
@@ -38,7 +39,7 @@ export class PrivateCorsInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    if (lawplacePattern.test(origin)) {
+    if (lawplacePattern.test(origin) || lawplaceAdminPattern.test(origin)) {
       res.header('Access-Control-Allow-Origin', origin);
       return next.handle();
     }
