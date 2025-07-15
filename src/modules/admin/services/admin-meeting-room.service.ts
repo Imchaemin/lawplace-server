@@ -9,6 +9,8 @@ import {
 } from '@/entities/meeting-room';
 import { PrismaService } from '@/prisma/services/prisma.service';
 
+import { CreateMeetingRoomBodyDto, UpdateMeetingRoomBodyDto } from '../dtos/meeting-room.dto';
+
 @Injectable()
 export class AdminMeetingRoomService {
   constructor(private readonly prisma: PrismaService) {}
@@ -90,5 +92,54 @@ export class AdminMeetingRoomService {
     );
 
     return res;
+  }
+
+  async createMeetingRoom(data: CreateMeetingRoomBodyDto): Promise<MeetingRoom> {
+    const meetingRoom = await this.prisma.meetingRoom.create({
+      data: {
+        name: data.name,
+        image: data.image,
+        facilities: data.facilities.split(','),
+
+        capacity: data.capacity,
+
+        enablePeakTime: true,
+        peakTimeStartAt: data.peakTimeStartAt,
+        peakTimeEndAt: data.peakTimeEndAt,
+
+        credit: data.credit,
+        peakTimeCredit: data.peakTimeCredit,
+      },
+    });
+
+    return meetingRoom;
+  }
+
+  async updateMeetingRoom(id: string, data: UpdateMeetingRoomBodyDto): Promise<MeetingRoom> {
+    const meetingRoom = await this.prisma.meetingRoom.update({
+      where: { id },
+      data: {
+        name: data.name,
+        image: data.image,
+        facilities: data.facilities.split(','),
+
+        capacity: data.capacity,
+
+        enablePeakTime: true,
+        peakTimeStartAt: data.peakTimeStartAt,
+        peakTimeEndAt: data.peakTimeEndAt,
+
+        credit: data.credit,
+        peakTimeCredit: data.peakTimeCredit,
+      },
+    });
+
+    return meetingRoom;
+  }
+
+  async deleteMeetingRoom(id: string): Promise<void> {
+    await this.prisma.meetingRoom.delete({
+      where: { id },
+    });
   }
 }
