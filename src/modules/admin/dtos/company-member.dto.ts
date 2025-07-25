@@ -18,6 +18,7 @@ export const AdminCreateCompanyDto = z.object({
   startDate: z.string(),
   endDate: z.string().optional().nullable(),
   defaultCredit: z.string().transform(val => Number(val)),
+  currentCredit: z.string().transform(val => Number(val)),
 });
 export type AdminCreateCompanyDto = z.infer<typeof AdminCreateCompanyDto>;
 

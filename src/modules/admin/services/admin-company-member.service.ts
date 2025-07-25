@@ -107,6 +107,7 @@ export class AdminCompanyMemberService {
       startDate,
       endDate,
       defaultCredit,
+      currentCredit,
     } = data;
 
     const start = set(new Date(startDate), { minutes: 0, seconds: 0, milliseconds: 0 });
@@ -124,7 +125,7 @@ export class AdminCompanyMemberService {
         data: {
           companyId: company.id,
 
-          currentCredit: defaultCredit,
+          currentCredit,
           defaultCredit,
 
           lastRenewalAt: start,
@@ -313,13 +314,45 @@ export class AdminCompanyMemberService {
 
   async deleteCompany(companyId: string): Promise<void> {
     await this.prisma.$transaction(async tx => {
+      const companyMembers = await tx.user.findMany({
+        where: { companyId },
+      });
+
+      await tx.user.updateMany({
+        where: { id: { in: companyMembers.map(member => member.id) } },
+        data: {
+          companyId: null,
+          companyRole: null,
+          creditId: null,
+          membershipId: null,
+        },
+      });
       await tx.company.delete({ where: { id: companyId } });
     });
   }
 
   async deleteCompanyMember(memberId: string): Promise<void> {
     await this.prisma.$transaction(async tx => {
-      await tx.user.delete({ where: { id: memberId } });
+      const currentUser = await tx.user.findUnique({
+        where: { id: memberId },
+        select: {
+          companyId: true,
+        },
+      });
+
+      if (currentUser?.companyId) {
+        await tx.user.update({
+          where: { id: memberId },
+          data: {
+            companyId: null,
+            companyRole: null,
+            creditId: null,
+            membershipId: null,
+          },
+        });
+      } else {
+        await tx.user.delete({ where: { id: memberId } });
+      }
     });
   }
 }
