@@ -30,7 +30,7 @@ export class AuthService {
           name: userInfo.name,
 
           provider: userInfo.provider,
-          providerId: userInfo.id,
+          providerId: userInfo.id.toString(),
         },
       });
       const { accessToken, refreshToken } = await this.generateTokens(existing.id);
@@ -49,7 +49,7 @@ export class AuthService {
         name: userInfo.name,
         phone: '',
         provider: userInfo.provider,
-        providerId: userInfo.id,
+        providerId: userInfo.id.toString(),
         termsAndConditionsAccepted: false,
       },
       select: {
@@ -185,6 +185,18 @@ export class AuthService {
     return this.signinup(userInfo);
   }
 
+  async signinupFromKakao(kakaoAccessToken: string): Promise<UserAuth> {
+    const userInfo = await this.authOauthService.getKakaoUserInfo(kakaoAccessToken);
+
+    return this.signinup(userInfo);
+  }
+
+  async signinupFromNaver(naverAccessToken: string): Promise<UserAuth> {
+    const userInfo = await this.authOauthService.getNaverUserInfo(naverAccessToken);
+
+    return this.signinup(userInfo);
+  }
+
   async generateTokens(userId: string) {
     const payload = { sub: userId };
 
@@ -229,15 +241,6 @@ export class AuthService {
         message: 'no refresh token stored',
       });
     }
-
-    // const hashedRefreshToken = SHA256(refreshToken).toString();
-    // const isMatch = hashedRefreshToken === user.refreshToken;
-    // if (!isMatch) {
-    //   throw new UnauthorizedException({
-    //     type: 'UNAUTHORIZED',
-    //     message: 'refresh token mismatch',
-    //   });
-    // }
 
     const tokens = await this.generateTokens(userId);
     return tokens;

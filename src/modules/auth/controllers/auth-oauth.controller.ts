@@ -65,4 +65,58 @@ export class AuthOauthController {
       termsAndConditionsAccepted: user.termsAndConditionsAccepted,
     };
   }
+
+  @Post('kakao/callback')
+  async kakaoCallback(@Body() body: { accessToken: string }) {
+    const { accessToken } = body;
+    if (!accessToken) {
+      throw new BadRequestException({
+        type: 'BAD_REQUEST',
+        message: 'authorization code missing',
+      });
+    }
+
+    const userAuth = await this.authService.signinupFromKakao(accessToken);
+    const user = await this.prisma.user.findUnique({
+      where: { id: userAuth.id },
+      select: {
+        termsAndConditionsAccepted: true,
+        role: true,
+      },
+    });
+
+    return {
+      userId: userAuth.id,
+      accessToken: userAuth.accessToken,
+      refreshToken: userAuth.refreshToken,
+      termsAndConditionsAccepted: user.termsAndConditionsAccepted,
+    };
+  }
+
+  @Post('naver/callback')
+  async naverCallback(@Body() body: { accessToken: string }) {
+    const { accessToken } = body;
+    if (!accessToken) {
+      throw new BadRequestException({
+        type: 'BAD_REQUEST',
+        message: 'authorization code missing',
+      });
+    }
+
+    const userAuth = await this.authService.signinupFromNaver(accessToken);
+    const user = await this.prisma.user.findUnique({
+      where: { id: userAuth.id },
+      select: {
+        termsAndConditionsAccepted: true,
+        role: true,
+      },
+    });
+
+    return {
+      userId: userAuth.id,
+      accessToken: userAuth.accessToken,
+      refreshToken: userAuth.refreshToken,
+      termsAndConditionsAccepted: user.termsAndConditionsAccepted,
+    };
+  }
 }
