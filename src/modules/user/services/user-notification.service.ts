@@ -68,7 +68,7 @@ export class UserNotificationService {
         },
         {
           OR: [
-            { target: null }, // target이 null인 경우 (모든 사용자용)
+            // { target: null }, // target이 null인 경우 (모든 사용자용)
             { target: userId }, // target이 특정 userId와 일치하는 경우
           ],
         },
