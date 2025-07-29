@@ -116,7 +116,7 @@ export class CompanyService {
     await this.prisma.companyInvitation.deleteMany({
       where: {
         companyId,
-        userEmail: { in: employeeIds },
+        id: { in: employeeIds },
       },
     });
   }
